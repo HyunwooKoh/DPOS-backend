@@ -1,9 +1,5 @@
 package com.autohrsystem.Handler;
 
-import java.util.Map;
-
-public class OCRHandler {
-    public interface sendOCRRequest{
-        Map<String, Object> getData();
-    };
+public interface OCRHandler {
+    public void requestOcr(String filePath, String jobID);
 }
