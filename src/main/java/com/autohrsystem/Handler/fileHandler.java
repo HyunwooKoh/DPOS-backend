@@ -1,4 +1,6 @@
 package com.autohrsystem.Handler;
 
-public class fileHandler {
+public interface fileHandler {
+    void uploadFile();
+    void downloadResult();
 }
