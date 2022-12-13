@@ -1,4 +1,4 @@
-package com.autohrsystem.Handler.impl;
+package com.autohrsystem.ocr;
 
 import com.autohrsystem.structure.OcrSubTaskArguments;
 import org.springframework.stereotype.Service;

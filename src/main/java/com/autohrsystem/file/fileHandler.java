@@ -1,4 +1,4 @@
-package com.autohrsystem.Handler;
+package com.autohrsystem.file;
 
 public interface fileHandler {
     void uploadFile(String filePath);

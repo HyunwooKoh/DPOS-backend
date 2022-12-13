@@ -1,6 +1,6 @@
-package com.autohrsystem;
+package com.autohrsystem.ocr;
 
-import com.autohrsystem.Handler.impl.OcrServiceClient;
+import com.autohrsystem.ocr.OcrServiceClient;
 import com.autohrsystem.structure.OcrSubTaskArguments;
 
 import io.vertx.core.AsyncResult;
