@@ -1,7 +1,10 @@
 package com.autohrsystem.file;
 
-import com.autohrsystem.common.api.CommonApi;
+import com.autohrsystem.common.CommonApi;
+import com.autohrsystem.common.Error;
+import com.autohrsystem.common.ErrorCode;
 
+import java.io.File;
 import io.vertx.core.json.JsonArray;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -12,67 +15,91 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class FileHandler {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+    private final String m_uuid;
+    private final String m_ext;
+    private final String m_localTempDir;
 
-    public String getFile(String uuid) {
-        String localPath = CommonApi.generateTempPath() + "/" + uuid;
-        if (!checkFileIsExist(uuid)) {
-            // TODO: throw Error
-        }
-
-        return localPath;
+    public FileHandler(String uuid, String ext) {
+        m_uuid = uuid;
+        m_ext = "." + ext;
+        m_localTempDir = CommonApi.getTempDir() + "/" + uuid + "/";
     }
 
-    private boolean checkFileIsExist(String uuid) {
+    public String getFile() throws Error {
+        String localFilePath = m_localTempDir + "origin" + m_ext;
+
+        if (!checkOriginFileIsExist()) {
+            throw new Error(ErrorCode.FSV_FILE_NOT_FOUND,"Cannot find file on server, ID : " + m_uuid);
+        }
+
+        File file = new File(m_localTempDir + "origin" + m_ext);
+        if (file.exists()) {
+            throw new Error(ErrorCode.FSV_FILE_ALREADY_EXIST,"File already exist, localFilePath : " + m_localTempDir + "origin" + m_ext);
+        }
+        if (!getFileFromServer(file)) {
+            throw new Error(ErrorCode.FSV_FILE_DOWNLOAD_FAILED,
+                    "File Download failed, uuid : " + m_uuid + ", localFilePath : " + m_localTempDir + "origin" + m_ext);
+        }
+        return m_localTempDir + "origin" + m_ext;
+    }
+
+    public boolean uploadResultFile(String resultFilePath) {
+        return true;
+    }
+
+    public boolean removeFiles() {
+        return true;
+    }
+
+    private boolean checkOriginFileIsExist() {
         try {
-            UriComponents uri = UriComponentsBuilder.fromHttpUrl("http://fileServer/get/").build();
+            // TODO : use ENV for file server Address
+            UriComponents uri = UriComponentsBuilder.fromHttpUrl("http://hq.epapyrus.com:11058/files/").build();
             ResponseEntity<?> resultMap = new RestTemplate().exchange(
                     uri.toString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Object.class);
 
-            if (resultMap.getStatusCode().value() != 200) {
+            if (resultMap.getStatusCode().value() != 200 || resultMap.getBody() == null) {
                 return false;
             }
 
             JsonArray files = new JsonArray(resultMap.getBody().toString());
             for (int i = 0 ; i < files.size(); i++) {
-                if(files.getString(i) == uuid) {
+                if(files.getString(i).equals(m_uuid + m_ext)) {
                     return true;
                 }
             }
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            logger.error("Error occur during get file list from file server\n" +
-                    e.toString() + "\n");
+            logger.error("Error occur during get file list from file server");
+            e.printStackTrace();
             return false;
         }
         return true;
     }
 
-    private boolean getFileFromServer(String uuid, String localFilePath) {
-        //Spring restTemplate
-        HashMap<String, Object> result = new HashMap<String, Object>();
+    private boolean getFileFromServer(File file) {
         try {
-            UriComponents uri = UriComponentsBuilder.fromHttpUrl("http://fileServer/get/" + uuid).build();
+            UriComponents uri = UriComponentsBuilder.fromHttpUrl("http://hq.epapyrus.com:11058/files/" + m_uuid + "/origin" + m_ext).build();
             ResponseEntity<?> resultMap = new RestTemplate().exchange(
                     uri.toString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Object.class);
 
-            result.put("statusCode", resultMap.getStatusCode()); //http status code를 확인
-            result.put("header", resultMap.getHeaders()); //헤더 정보 확인
-            result.put("body", resultMap.getBody()); //실제 데이터 정보 확인
-
-            //에러처리해야댐
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            result.put("statusCode", e.getRawStatusCode());
-            result.put("body", e.getStatusText());
-            System.out.println("error");
-            System.out.println(e.toString());
+            if (resultMap.getStatusCode().value() != 200 || resultMap.getBody() == null) {
+                return false;
+            }
+            FileOutputStream outputStream = new FileOutputStream(file);
+            outputStream.write(resultMap.getBody().toString().getBytes());
+            outputStream.close();
+        } catch (HttpClientErrorException | HttpServerErrorException httpError) {
+            logger.error("Error occur during get target file from file server");
+            httpError.printStackTrace();
             return false;
-        } catch (Exception e) {
-            result.put("statusCode", "999");
-            result.put("body", "excpetion오류");
-            System.out.println(e.toString());
+        } catch (IOException ioError) {
+            logger.error("Error occur during write file on local path");
+            ioError.printStackTrace();
             return false;
         }
         return true;
