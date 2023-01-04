@@ -7,7 +7,8 @@ public class CommonApi {
         return UUID.randomUUID().toString();
     }
 
-    public static String getTempDir() {
+    public static String getTempDir(String uuid) {
+        // TEMPDIR + "/" + uuid + "/";
         return "";
     }
 }
