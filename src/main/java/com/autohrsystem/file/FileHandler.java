@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import io.vertx.core.json.JsonArray;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -23,16 +25,20 @@ import org.slf4j.LoggerFactory;
 
 
 public class FileHandler {
+    @Autowired
+    private Environment env;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final String m_uuid;
     private final String m_ext;
     private final String m_originFilePath;
     private final String m_resulFilePath;
+    private final String m_fileServerUrl;
     public FileHandler(String uuid, String ext) {
         m_uuid = uuid;
         m_ext = "." + ext;
         m_originFilePath = CommonApi.getTempDir(uuid) + "origin" + m_ext;
         m_resulFilePath = CommonApi.getTempDir(uuid) + "result.json";
+        m_fileServerUrl = env.getProperty("FILE_SERVER_URL") + "/files/";
     }
 
     public String getIFile() throws Error {
@@ -75,7 +81,7 @@ public class FileHandler {
             Resource resultJson = new FileSystemResource(m_resulFilePath);
             body.add("files", resultJson);
 
-            UriComponents uri = UriComponentsBuilder.fromHttpUrl("http://hq.epapyrus.com:11058/files/" + m_uuid + "/result.json").build();
+            UriComponents uri = UriComponentsBuilder.fromHttpUrl(m_fileServerUrl + m_uuid + "/result.json").build();
             ResponseEntity<?> resultMap = new RestTemplate().exchange(
                     uri.toString(), HttpMethod.POST, new HttpEntity<>(body, headers), Object.class);
 
@@ -114,7 +120,7 @@ public class FileHandler {
 
     private boolean getFileFromServer(File file) {
         try {
-            UriComponents uri = UriComponentsBuilder.fromHttpUrl("http://hq.epapyrus.com:11058/files/" + m_uuid + "/origin" + m_ext).build();
+            UriComponents uri = UriComponentsBuilder.fromHttpUrl(m_fileServerUrl + m_uuid + "/origin" + m_ext).build();
             ResponseEntity<?> resultMap = new RestTemplate().exchange(
                     uri.toString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Object.class);
 
@@ -139,7 +145,7 @@ public class FileHandler {
     private boolean checkFileIsExist(String targetFile) {
         try {
             // TODO : use ENV for file server Address
-            UriComponents uri = UriComponentsBuilder.fromHttpUrl("http://hq.epapyrus.com:11058/files/").build();
+            UriComponents uri = UriComponentsBuilder.fromHttpUrl(m_fileServerUrl).build();
             ResponseEntity<?> resultMap = new RestTemplate().exchange(
                     uri.toString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Object.class);
 
