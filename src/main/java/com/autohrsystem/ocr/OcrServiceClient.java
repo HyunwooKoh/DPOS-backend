@@ -1,52 +1,47 @@
 package com.autohrsystem.ocr;
 
-import com.autohrsystem.structure.OcrSubTaskArguments;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.multipart.MultipartForm;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.autohrsystem.structure.registRequest;
+import com.autohrsystem.common.Error;
+import com.autohrsystem.structure.OcrParams;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
+
+import io.vertx.core.json.JsonObject;
+import reactor.core.publisher.Mono;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @Service
 public abstract class OcrServiceClient {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	private static JsonObject mReqOption;
 	public static final String REQ_DOCUMENT = "Document";
-	protected final WebClient client;
+	private final OcrParams m_param;
 
-	public OcrServiceClient(Vertx vertx) {
-		this.client = WebClient.create(vertx);
+	public OcrServiceClient(OcrParams params) {
+		m_param = params;
 	}
 
 	public static String appendPath(String url, String path) {
 		return url + (url.endsWith("/") ? "" : "/") + path;
 	}
 
-	public static void setReqOption(JsonObject json) {
-		mReqOption = json;
-	}
-
-	@PostMapping("/register")
-    public String registNewDocument(@RequestBody registRequest body) {
+    public String register() {
         // TODO: requestOCR - waitPolling - parseResult - insertToDB
         // return : new data's key
         return "";
@@ -67,54 +62,45 @@ public abstract class OcrServiceClient {
         // TODO: insert data to DB
     }
 
-    public String generateKey() {
-        // TODO : generate new key for new data
-        return "";
-    }
-
-    protected Future<String> push(String uuid, String url, OcrSubTaskArguments params) {
-		// TODO : get MultipartForm form fileHandler
-		//  MultipartForm form =
-		//	MultipartForm.create().binaryFileUpload("ReqFile", resource.getName(), resource.getAbsolutePath(),
-		//		"image/jpeg");
-		
-		MultipartForm form = null;
-		form.attribute("ReqType", params.get("reqType"));
-		form.attribute("ReqOption", mReqOption.toString());
-		CompletableFuture<String> pushFuture = new CompletableFuture<>();
-		logger.info("send /push request...");
-		client.postAbs(appendPath(url, "push"))
-			.putHeader("content-type", "multipart/form-data")
-			.sendMultipartForm(form, asyncResult -> handlePush(asyncResult, new File(/*TODO: get file path form db by uuid*/""), pushFuture));
-		return pushFuture;
-	}
-
-    protected void handlePush(final AsyncResult<HttpResponse<Buffer>> asyncResult, final File resource, final CompletableFuture<String> pushFuture) {
-		logger.info("received /push response... : {}", asyncResult.result());
-		if (asyncResult.succeeded()) {
-			JsonObject jsonObject = null;
-			try {
-				jsonObject = asyncResult.result().bodyAsJsonObject();
-			} catch (Exception e) {
-				throwPushError("OCR Server의 응답을 JsonObject로 파싱하던 중 에러가 발생했습니다.", asyncResult.result(), resource);
-				return;
-			}
-			String code = jsonObject.getString("Code");
-			if ("Error".equalsIgnoreCase(code)) {
-				String message = jsonObject.getString("Message");
-				throwPushError("[push response] " + message, asyncResult.result(), resource);
-				return;
-			}
-			String OCRId = jsonObject.getString("Message");
-			logger.info("OCRId: {}", OCRId);
-			pushFuture.complete(OCRId);
-		} else {
-			throwPushError("파일 전송 중 에러가 발생했습니다.", asyncResult.result(), resource);
+    protected String push(String uuid, String url, OcrParams params) throws Error {
+		File inputFile = new File(m_param.m_inputUri);
+		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+		try {
+			bodyBuilder.part("ReqFile", new ByteArrayResource(Files.readAllBytes(inputFile.toPath())));
+		} catch (IOException ioError) {
+			throw new RuntimeException(ioError);
 		}
+		bodyBuilder.part("ReqType", REQ_DOCUMENT);
+		bodyBuilder.part("ReqOption", m_param.m_reqOption);
+
+		logger.info("send /push request...");
+		JsonObject response = exchangePushRequest(bodyBuilder).block();
+		if (response == null || response.isEmpty()) {
+			// TODO : throw Error
+		}
+		return response.getString("id");
 	}
 
-    protected void throwPushError(String message, HttpResponse<Buffer> result, File resource) {
-		//TODO : implement throw
+	private Mono<JsonObject> exchangePushRequest(MultipartBodyBuilder bodyBuilder) throws Error{
+		return WebClient
+				.create()
+				.method(HttpMethod.POST)
+				.uri(m_param.m_serverUrl)
+				.contentType(MediaType.MULTIPART_FORM_DATA)
+				.body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+				.exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonObject.class)
+						.map(validReqVo -> {
+							if (clientResponse.statusCode().is2xxSuccessful()) {
+								logger.info("");
+								return validReqVo;
+							} else if (clientResponse.statusCode().is4xxClientError()) {
+								logger.error("API 요청 중 4xx 에러가 발생했습니다. 요청 데이터를 확인해주세요.");
+							} else {
+								logger.error("API 요청 중 Tree 서버에서 5xx 에러가 발생했습니다.");
+							}
+							return new JsonObject();
+						})
+				);
 	}
 
     protected CompletableFuture<JsonObject> pull(final String url, final String OCRId, int maxRecursion) {
