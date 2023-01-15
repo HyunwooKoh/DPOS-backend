@@ -62,6 +62,7 @@ public abstract class OcrServiceClient {
         // TODO: insert data to DB
     }
 
+	/*{"Code": "Error", "Message": "No-ReqType"}*/
     protected String push(String uuid, String url, OcrParams params) throws Error {
 		File inputFile = new File(m_param.m_inputUri);
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
@@ -78,7 +79,7 @@ public abstract class OcrServiceClient {
 		if (response == null || response.isEmpty()) {
 			// TODO : throw Error
 		}
-		return response.getString("id");
+		return response.getString("Message");
 	}
 
 	private Mono<JsonObject> exchangePushRequest(MultipartBodyBuilder bodyBuilder) throws Error{
