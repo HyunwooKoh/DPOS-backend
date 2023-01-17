@@ -3,13 +3,10 @@ package com.autohrsystem.ocr;
 import com.autohrsystem.common.Error;
 import com.autohrsystem.structure.OcrParams;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -62,7 +59,7 @@ public abstract class OcrServiceClient {
         // TODO: insert data to DB
     }
 
-	/*{"Code": "Error", "Message": "No-ReqType"}*/
+	/*{"Code": "OK", "Message": "TASK-ID"}*/
     protected String push(String uuid, String url, OcrParams params) throws Error {
 		File inputFile = new File(m_param.m_inputUri);
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
@@ -86,7 +83,7 @@ public abstract class OcrServiceClient {
 		return WebClient
 				.create()
 				.method(HttpMethod.POST)
-				.uri(m_param.m_serverUrl)
+				.uri(m_param.m_serverUrl + "/push")
 				.contentType(MediaType.MULTIPART_FORM_DATA)
 				.body(BodyInserters.fromMultipartData(bodyBuilder.build()))
 				.exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonObject.class)
@@ -104,41 +101,67 @@ public abstract class OcrServiceClient {
 				);
 	}
 
-    protected CompletableFuture<JsonObject> pull(final String url, final String OCRId, int maxRecursion) {
-		CompletableFuture<JsonObject> pullFuture = new CompletableFuture<>();
+    protected boolean pull(String taskID, int maxRecursion) throws Error {
+		File resultJson = new File(m_param.m_outputUri);
+		if (resultJson.exists()) {
+			// TODO: throw Error
+		}
+
 		logger.info("send /pull request...");
-		pull(pullFuture, url, OCRId, 0, maxRecursion);
-		return pullFuture;
-	}
+		JsonObject response = new JsonObject();
+		JsonObject body = new JsonObject();
+		body.put("TaskID", taskID);
+		int tryCount = 0;
+		for (; tryCount < maxRecursion; tryCount++) {
+			response = exchangePullRequest(body).block();
+			if (response == null || response.isEmpty()) {
+				// TODO : throw Error
+			} else if (response.getJsonObject("response") == null) {
+				// TODO: throw Error
+			}
 
-    protected void pull(final CompletableFuture<JsonObject> pullFuture, final String url, final String OCRId,
-						int recursion, int maxRecursion) {
-		MultipartForm form = MultipartForm.create().attribute("TaskID", OCRId);
-		client.postAbs(appendPath(url, "pull"))
-			.putHeader("content-type", "multipart/form-data")
-			.sendMultipartForm(form, ar -> handlePull(ar, url, OCRId, pullFuture, recursion, maxRecursion));
-	}
-
-    protected abstract boolean handlePull(String id, JsonObject body, CompletableFuture<JsonObject> pullFuture);
-
-    protected void handlePull(final AsyncResult<HttpResponse<Buffer>> ar,
-							  final String url, final String OCRId,
-							  final CompletableFuture<JsonObject> pullFuture,
-							  int recursion, int maxRecursion) {
-		logger.info("received /pull response... : {}", ar.result());
-
-		if (ar.succeeded()) {
-			JsonObject body = ar.result().bodyAsJsonObject();
-			logger.debug("OCR polling succeeded : {}", body);
-			if (handlePull(OCRId, body, pullFuture)) { return; }
+			if (response.getJsonObject("response").getString("status") == "success") {
+				break;
+			}
 		}
-		if (recursion >= maxRecursion) {
-			// TODO: implement throw
-			return;
+
+		if (tryCount == maxRecursion) {
+			// TODO: thrwo Error
 		}
-		try { TimeUnit.SECONDS.sleep(3); } catch (InterruptedException ignored) { }
-		logger.info("resend /pull request... : {}", recursion + 1);
-		pull(pullFuture, url, OCRId, recursion + 1, maxRecursion);
+		try {
+			if (resultJson.createNewFile()) {
+				logger.error("Error occur during create file on server, file path : " + resultJson.getAbsolutePath());
+				return false;
+			}
+			FileWriter file = new FileWriter(resultJson.getAbsolutePath());
+			file.write(response.toString());
+			file.flush();
+			file.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		return true;
 	}
 
+    protected Mono<JsonObject> exchangePullRequest(JsonObject body) {
+		return WebClient
+				.create()
+				.method(HttpMethod.POST)
+				.uri(m_param.m_serverUrl + "/pull")
+				.contentType(MediaType.APPLICATION_JSON)
+				.bodyValue(body)
+				.exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonObject.class)
+						.map(validReqVo -> {
+							if (clientResponse.statusCode().is2xxSuccessful()) {
+								return validReqVo;
+							} else if (clientResponse.statusCode().is4xxClientError()) {
+								logger.error("API 요청 중 4xx 에러가 발생했습니다. 요청 데이터를 확인해주세요.");
+							} else {
+								logger.error("API 요청 중 Tree 서버에서 5xx 에러가 발생했습니다.");
+							}
+							return new JsonObject();
+						})
+				);
+	}
 }
