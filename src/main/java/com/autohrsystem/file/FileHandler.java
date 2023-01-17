@@ -127,6 +127,10 @@ public class FileHandler {
             if (resultMap.getStatusCode().value() != 200 || resultMap.getBody() == null) {
                 return false;
             }
+            if (file.createNewFile()) {
+                logger.error("Error occur during create file on server");
+                return false;
+            }
             FileOutputStream outputStream = new FileOutputStream(file);
             outputStream.write(resultMap.getBody().toString().getBytes());
             outputStream.close();
