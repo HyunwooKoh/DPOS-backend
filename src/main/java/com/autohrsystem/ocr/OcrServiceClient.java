@@ -27,7 +27,8 @@ import org.slf4j.LoggerFactory;
 @Service
 public abstract class OcrServiceClient {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	public static final String REQ_DOCUMENT = "Document";
+	private static final String REQ_DOCUMENT = "Document";
+	private static final int MAX_RECURSION = 30;
 	private final OcrParams m_param;
 
 	public OcrServiceClient(OcrParams params) {
@@ -38,29 +39,16 @@ public abstract class OcrServiceClient {
 		return url + (url.endsWith("/") ? "" : "/") + path;
 	}
 
-    public String register() {
-        // TODO: requestOCR - waitPolling - parseResult - insertToDB
-        // return : new data's key
-        return "";
-    }
-
-    public void getResultFile(String resFilePath) {
-        // TODO: getResult json file from OCR server
-    }
-
-    public Map<String,String> getTargetData(String resFilePath) {
-        // TODO: parseData and get target data
-        Map<String, String> datas = new HashMap<String, String>();
-        datas.put("","");
-        return datas;
-    }
-
-    public void insertToDB(Map<String,String> data) {
-        // TODO: insert data to DB
+    public void DoTask() throws Error{
+		String taskID = push();
+		pull(taskID);
+		// result parser
+		// db insert
+		// TODO: 이걸 여기서 할지, 바깥 컨트롤러에서 할 지 고민
     }
 
 	/*{"Code": "OK", "Message": "TASK-ID"}*/
-    protected String push(String uuid, String url, OcrParams params) throws Error {
+    protected String push() throws Error {
 		File inputFile = new File(m_param.m_inputUri);
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
 		try {
@@ -74,7 +62,7 @@ public abstract class OcrServiceClient {
 		logger.info("send /push request...");
 		JsonObject response = exchangePushRequest(bodyBuilder).block();
 		if (response == null || response.isEmpty()) {
-			// TODO : throw Error
+			// TODO : throw Error()
 		}
 		return response.getString("Message");
 	}
@@ -101,7 +89,7 @@ public abstract class OcrServiceClient {
 				);
 	}
 
-    protected boolean pull(String taskID, int maxRecursion) throws Error {
+    protected void pull(String taskID) throws Error {
 		File resultJson = new File(m_param.m_outputUri);
 		if (resultJson.exists()) {
 			// TODO: throw Error
@@ -112,26 +100,25 @@ public abstract class OcrServiceClient {
 		JsonObject body = new JsonObject();
 		body.put("TaskID", taskID);
 		int tryCount = 0;
-		for (; tryCount < maxRecursion; tryCount++) {
+		for (; tryCount < MAX_RECURSION; tryCount++) {
 			response = exchangePullRequest(body).block();
 			if (response == null || response.isEmpty()) {
-				// TODO : throw Error
+				// TODO : throw Error()
 			} else if (response.getJsonObject("response") == null) {
-				// TODO: throw Error
+				// TODO : throw Error()
 			}
 
-			if (response.getJsonObject("response").getString("status") == "success") {
+			if (response.getJsonObject("response").getString("status").equals("success")) {
 				break;
 			}
 		}
 
-		if (tryCount == maxRecursion) {
-			// TODO: thrwo Error
+		if (tryCount == MAX_RECURSION) {
+			// TODO : throw Error()
 		}
 		try {
-			if (resultJson.createNewFile()) {
-				logger.error("Error occur during create file on server, file path : " + resultJson.getAbsolutePath());
-				return false;
+			if (!resultJson.createNewFile()) {
+				// TODO : throw Error()
 			}
 			FileWriter file = new FileWriter(resultJson.getAbsolutePath());
 			file.write(response.toString());
@@ -140,8 +127,6 @@ public abstract class OcrServiceClient {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
-		return true;
 	}
 
     protected Mono<JsonObject> exchangePullRequest(JsonObject body) {
