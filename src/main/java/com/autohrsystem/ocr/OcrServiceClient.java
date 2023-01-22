@@ -5,9 +5,6 @@ import com.autohrsystem.structure.OcrParams;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.Map;
-import java.util.HashMap;
-
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.core.io.ByteArrayResource;
