@@ -1,157 +1,161 @@
 package com.autohrsystem.ocr;
 
-import com.autohrsystem.structure.OcrSubTaskArguments;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import com.autohrsystem.common.Error;
+import com.autohrsystem.common.ErrorCode;
+import com.autohrsystem.structure.OcrParams;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Objects;
+
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.multipart.MultipartForm;
+import reactor.core.publisher.Mono;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.autohrsystem.structure.registRequest;
 
-import java.io.File;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-@RestController
-@Service
-public abstract class OcrServiceClient {
+public class OcrServiceClient {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	private static JsonObject mReqOption;
-	public static final String REQ_DOCUMENT = "Document";
-	protected final WebClient client;
+	private static final String REQ_DOCUMENT = "Document";
+	private static final int MAX_RECURSION = 30;
+	private final OcrParams m_param;
 
-	public OcrServiceClient(Vertx vertx) {
-		this.client = WebClient.create(vertx);
+	public OcrServiceClient(OcrParams params) {
+		m_param = params;
 	}
 
 	public static String appendPath(String url, String path) {
 		return url + (url.endsWith("/") ? "" : "/") + path;
 	}
 
-	public static void setReqOption(JsonObject json) {
-		mReqOption = json;
-	}
-
-	@PostMapping("/register")
-    public String registNewDocument(@RequestBody registRequest body) {
-        // TODO: requestOCR - waitPolling - parseResult - insertToDB
-        // return : new data's key
-        return "";
+    public void DoTask() throws Error{
+		String taskID = push();
+		pull(taskID);
     }
 
-    public void getResultFile(String resFilePath) {
-        // TODO: getResult json file from OCR server
-    }
+	/*{"Code": "OK", "Message": "TASK-ID"}*/
+    protected String push() throws Error {
+		File inputFile = new File(m_param.m_inputUri);
+		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+		try {
+			bodyBuilder.part("ReqFile", new ByteArrayResource(Files.readAllBytes(inputFile.toPath())));
+		} catch (IOException ioError) {
+			throw new RuntimeException(ioError);
+		}
+		bodyBuilder.part("ReqType", REQ_DOCUMENT);
+		bodyBuilder.part("ReqOption", m_param.m_reqOption);
 
-    public Map<String,String> getTargetData(String resFilePath) {
-        // TODO: parseData and get target data
-        Map<String, String> datas = new HashMap<String, String>();
-        datas.put("","");
-        return datas;
-    }
-
-    public void insertToDB(Map<String,String> data) {
-        // TODO: insert data to DB
-    }
-
-    public String generateKey() {
-        // TODO : generate new key for new data
-        return "";
-    }
-
-    protected Future<String> push(String uuid, String url, OcrSubTaskArguments params) {
-		// TODO : get MultipartForm form fileHandler
-		//  MultipartForm form =
-		//	MultipartForm.create().binaryFileUpload("ReqFile", resource.getName(), resource.getAbsolutePath(),
-		//		"image/jpeg");
-		
-		MultipartForm form = null;
-		form.attribute("ReqType", params.get("reqType"));
-		form.attribute("ReqOption", mReqOption.toString());
-		CompletableFuture<String> pushFuture = new CompletableFuture<>();
 		logger.info("send /push request...");
-		client.postAbs(appendPath(url, "push"))
-			.putHeader("content-type", "multipart/form-data")
-			.sendMultipartForm(form, asyncResult -> handlePush(asyncResult, new File(/*TODO: get file path form db by uuid*/""), pushFuture));
-		return pushFuture;
-	}
-
-    protected void handlePush(final AsyncResult<HttpResponse<Buffer>> asyncResult, final File resource, final CompletableFuture<String> pushFuture) {
-		logger.info("received /push response... : {}", asyncResult.result());
-		if (asyncResult.succeeded()) {
-			JsonObject jsonObject = null;
-			try {
-				jsonObject = asyncResult.result().bodyAsJsonObject();
-			} catch (Exception e) {
-				throwPushError("OCR Server의 응답을 JsonObject로 파싱하던 중 에러가 발생했습니다.", asyncResult.result(), resource);
-				return;
+		JsonObject response = exchangePushRequest(bodyBuilder).block();
+		if (response == null || response.isEmpty()) {
+			throw new Error(ErrorCode.OCR_PUSH_ERROR, "Push response is null or empty.");
+		} else if (response.getString("Code") == null || response.getString("Message") == null) {
+			throw new Error(ErrorCode.OCR_PUSH_ERROR, "Invalid push response json. response : " + response.toString());
+		} else if (!Objects.equals(response.getString("Code"), "OK")) {
+			String responseCode = response.getString("Code");
+			// TODO: Specify error message
+			String msg = "";
+			if (Objects.equals(responseCode, "")) {
+				msg = "";
 			}
-			String code = jsonObject.getString("Code");
-			if ("Error".equalsIgnoreCase(code)) {
-				String message = jsonObject.getString("Message");
-				throwPushError("[push response] " + message, asyncResult.result(), resource);
-				return;
+			throw new Error(ErrorCode.OCR_PUSH_ERROR, "Error occur during push request. message : " + msg);
+		}
+		return response.getString("Message");
+	}
+
+	private Mono<JsonObject> exchangePushRequest(MultipartBodyBuilder bodyBuilder) throws Error{
+		return WebClient
+				.create()
+				.method(HttpMethod.POST)
+				.uri(m_param.m_serverUrl + "/push")
+				.contentType(MediaType.MULTIPART_FORM_DATA)
+				.body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+				.exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonObject.class)
+						.map(validReqVo -> {
+							if (clientResponse.statusCode().is2xxSuccessful()) {
+								logger.info("");
+								return validReqVo;
+							} else if (clientResponse.statusCode().is4xxClientError()) {
+								logger.error("4xx error occur during pull request.");
+							} else {
+								logger.error("5xx error occur during pull request.");
+							}
+							return new JsonObject();
+						})
+				);
+	}
+
+    protected void pull(String taskID) throws Error {
+		File resultJson = new File(m_param.m_outputUri);
+		if (resultJson.exists()) {
+			throw new Error(ErrorCode.OCR_RESULT_EXIST, "Result json already exist. path : " + resultJson.getAbsolutePath());
+		}
+
+		JsonObject response = new JsonObject();
+		JsonObject body = new JsonObject();
+		body.put("TaskID", taskID);
+		int tryCount = 0;
+		for (; tryCount < MAX_RECURSION; tryCount++) {
+			logger.info("send /pull request... tryCount : " + tryCount);
+			response = exchangePullRequest(body).block();
+			if (response == null || response.isEmpty()) {
+				throw new Error(ErrorCode.OCR_PULL_ERROR, "Pull response is null or empty.");
+			} else if (response.getJsonObject("response") == null) {
+				throw new Error(ErrorCode.OCR_PULL_ERROR, "Invalid pull response json, response : " + response.toString());
+			} else if (response.getJsonObject("response").getString("status").equals("failure")) {
+				throw new Error(ErrorCode.OCR_PULL_ERROR, "Pull response return fail, msg : " + response.getJsonObject("response").getString("message"));
 			}
-			String OCRId = jsonObject.getString("Message");
-			logger.info("OCRId: {}", OCRId);
-			pushFuture.complete(OCRId);
-		} else {
-			throwPushError("파일 전송 중 에러가 발생했습니다.", asyncResult.result(), resource);
+
+			if (response.getJsonObject("response").getString("status").equals("success")) {
+				break;
+			}
+		}
+
+		if (tryCount == MAX_RECURSION) {
+			throw new Error(ErrorCode.OCR_PULL_ERROR, "Pull request max tried. task ID : " + taskID);
+		}
+
+		try {
+			if (!resultJson.createNewFile()) {
+				throw new Error(ErrorCode.OCR_RESULT_SAVE, "Error occur during create file. path : " + resultJson.getAbsolutePath());
+			}
+			FileWriter file = new FileWriter(resultJson.getAbsolutePath());
+			file.write(response.toString());
+			file.flush();
+			file.close();
+		} catch (IOException e) {
+			logger.error("Error Occur during save ocr result json. path : " + resultJson.getAbsolutePath());
+			throw new RuntimeException(e);
 		}
 	}
 
-    protected void throwPushError(String message, HttpResponse<Buffer> result, File resource) {
-		//TODO : implement throw
+    protected Mono<JsonObject> exchangePullRequest(JsonObject body) {
+		return WebClient
+				.create()
+				.method(HttpMethod.POST)
+				.uri(m_param.m_serverUrl + "/pull")
+				.contentType(MediaType.APPLICATION_JSON)
+				.bodyValue(body)
+				.exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonObject.class)
+						.map(validReqVo -> {
+							if (clientResponse.statusCode().is2xxSuccessful()) {
+								return validReqVo;
+							} else if (clientResponse.statusCode().is4xxClientError()) {
+								logger.error("4xx error occur during pull request.");
+							} else {
+								logger.error("5xx error occur during pull request.");
+							}
+							return new JsonObject();
+						})
+				);
 	}
-
-    protected CompletableFuture<JsonObject> pull(final String url, final String OCRId, int maxRecursion) {
-		CompletableFuture<JsonObject> pullFuture = new CompletableFuture<>();
-		logger.info("send /pull request...");
-		pull(pullFuture, url, OCRId, 0, maxRecursion);
-		return pullFuture;
-	}
-
-    protected void pull(final CompletableFuture<JsonObject> pullFuture, final String url, final String OCRId,
-						int recursion, int maxRecursion) {
-		MultipartForm form = MultipartForm.create().attribute("TaskID", OCRId);
-		client.postAbs(appendPath(url, "pull"))
-			.putHeader("content-type", "multipart/form-data")
-			.sendMultipartForm(form, ar -> handlePull(ar, url, OCRId, pullFuture, recursion, maxRecursion));
-	}
-
-    protected abstract boolean handlePull(String id, JsonObject body, CompletableFuture<JsonObject> pullFuture);
-
-    protected void handlePull(final AsyncResult<HttpResponse<Buffer>> ar,
-							  final String url, final String OCRId,
-							  final CompletableFuture<JsonObject> pullFuture,
-							  int recursion, int maxRecursion) {
-		logger.info("received /pull response... : {}", ar.result());
-
-		if (ar.succeeded()) {
-			JsonObject body = ar.result().bodyAsJsonObject();
-			logger.debug("OCR polling succeeded : {}", body);
-			if (handlePull(OCRId, body, pullFuture)) { return; }
-		}
-		if (recursion >= maxRecursion) {
-			// TODO: implement throw
-			return;
-		}
-		try { TimeUnit.SECONDS.sleep(3); } catch (InterruptedException ignored) { }
-		logger.info("resend /pull request... : {}", recursion + 1);
-		pull(pullFuture, url, OCRId, recursion + 1, maxRecursion);
-	}
-
 }
