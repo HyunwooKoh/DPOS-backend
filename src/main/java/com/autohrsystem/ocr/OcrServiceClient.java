@@ -1,18 +1,21 @@
 package com.autohrsystem.ocr;
 
 import com.autohrsystem.common.Error;
+import com.autohrsystem.common.ErrorCode;
 import com.autohrsystem.structure.OcrParams;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Objects;
+
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.stereotype.Service;
 
 import io.vertx.core.json.JsonObject;
 import reactor.core.publisher.Mono;
@@ -20,9 +23,7 @@ import reactor.core.publisher.Mono;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RestController
-@Service
-public abstract class OcrServiceClient {
+public class OcrServiceClient {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	private static final String REQ_DOCUMENT = "Document";
 	private static final int MAX_RECURSION = 30;
@@ -39,9 +40,6 @@ public abstract class OcrServiceClient {
     public void DoTask() throws Error{
 		String taskID = push();
 		pull(taskID);
-		// result parser
-		// db insert
-		// TODO: 이걸 여기서 할지, 바깥 컨트롤러에서 할 지 고민
     }
 
 	/*{"Code": "OK", "Message": "TASK-ID"}*/
@@ -59,7 +57,17 @@ public abstract class OcrServiceClient {
 		logger.info("send /push request...");
 		JsonObject response = exchangePushRequest(bodyBuilder).block();
 		if (response == null || response.isEmpty()) {
-			// TODO : throw Error()
+			throw new Error(ErrorCode.OCR_PUSH_ERROR, "Push response is null or empty.");
+		} else if (response.getString("Code") == null || response.getString("Message") == null) {
+			throw new Error(ErrorCode.OCR_PUSH_ERROR, "Invalid push response json. response : " + response.toString());
+		} else if (!Objects.equals(response.getString("Code"), "OK")) {
+			String responseCode = response.getString("Code");
+			// TODO: Specify error message
+			String msg = "";
+			if (Objects.equals(responseCode, "")) {
+				msg = "";
+			}
+			throw new Error(ErrorCode.OCR_PUSH_ERROR, "Error occur during push request. message : " + msg);
 		}
 		return response.getString("Message");
 	}
@@ -77,9 +85,9 @@ public abstract class OcrServiceClient {
 								logger.info("");
 								return validReqVo;
 							} else if (clientResponse.statusCode().is4xxClientError()) {
-								logger.error("API 요청 중 4xx 에러가 발생했습니다. 요청 데이터를 확인해주세요.");
+								logger.error("4xx error occur during pull request.");
 							} else {
-								logger.error("API 요청 중 Tree 서버에서 5xx 에러가 발생했습니다.");
+								logger.error("5xx error occur during pull request.");
 							}
 							return new JsonObject();
 						})
@@ -89,20 +97,22 @@ public abstract class OcrServiceClient {
     protected void pull(String taskID) throws Error {
 		File resultJson = new File(m_param.m_outputUri);
 		if (resultJson.exists()) {
-			// TODO: throw Error
+			throw new Error(ErrorCode.OCR_RESULT_EXIST, "Result json already exist. path : " + resultJson.getAbsolutePath());
 		}
 
-		logger.info("send /pull request...");
 		JsonObject response = new JsonObject();
 		JsonObject body = new JsonObject();
 		body.put("TaskID", taskID);
 		int tryCount = 0;
 		for (; tryCount < MAX_RECURSION; tryCount++) {
+			logger.info("send /pull request... tryCount : " + tryCount);
 			response = exchangePullRequest(body).block();
 			if (response == null || response.isEmpty()) {
-				// TODO : throw Error()
+				throw new Error(ErrorCode.OCR_PULL_ERROR, "Pull response is null or empty.");
 			} else if (response.getJsonObject("response") == null) {
-				// TODO : throw Error()
+				throw new Error(ErrorCode.OCR_PULL_ERROR, "Invalid pull response json, response : " + response.toString());
+			} else if (response.getJsonObject("response").getString("status").equals("failure")) {
+				throw new Error(ErrorCode.OCR_PULL_ERROR, "Pull response return fail, msg : " + response.getJsonObject("response").getString("message"));
 			}
 
 			if (response.getJsonObject("response").getString("status").equals("success")) {
@@ -111,17 +121,19 @@ public abstract class OcrServiceClient {
 		}
 
 		if (tryCount == MAX_RECURSION) {
-			// TODO : throw Error()
+			throw new Error(ErrorCode.OCR_PULL_ERROR, "Pull request max tried. task ID : " + taskID);
 		}
+
 		try {
 			if (!resultJson.createNewFile()) {
-				// TODO : throw Error()
+				throw new Error(ErrorCode.OCR_RESULT_SAVE, "Error occur during create file. path : " + resultJson.getAbsolutePath());
 			}
 			FileWriter file = new FileWriter(resultJson.getAbsolutePath());
 			file.write(response.toString());
 			file.flush();
 			file.close();
 		} catch (IOException e) {
+			logger.error("Error Occur during save ocr result json. path : " + resultJson.getAbsolutePath());
 			throw new RuntimeException(e);
 		}
 	}
@@ -138,9 +150,9 @@ public abstract class OcrServiceClient {
 							if (clientResponse.statusCode().is2xxSuccessful()) {
 								return validReqVo;
 							} else if (clientResponse.statusCode().is4xxClientError()) {
-								logger.error("API 요청 중 4xx 에러가 발생했습니다. 요청 데이터를 확인해주세요.");
+								logger.error("4xx error occur during pull request.");
 							} else {
-								logger.error("API 요청 중 Tree 서버에서 5xx 에러가 발생했습니다.");
+								logger.error("5xx error occur during pull request.");
 							}
 							return new JsonObject();
 						})
