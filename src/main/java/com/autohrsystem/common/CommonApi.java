@@ -11,4 +11,8 @@ public class CommonApi {
         // TEMPDIR + "/" + uuid + "/";
         return "";
     }
+
+    public static String generateUuid() {
+        return UUID.randomUUID().toString();
+    }
 }
