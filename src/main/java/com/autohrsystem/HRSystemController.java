@@ -1,21 +1,21 @@
 package com.autohrsystem;
 
 import com.autohrsystem.common.CommonApi;
-import com.autohrsystem.executer.HRTaskExecutor;
 
+import com.autohrsystem.executer.HRTaskExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
-import java.util.Queue;
 
+@RestController
 public class HRSystemController {
-    private Queue<HRTaskExecutor> m_taskQueue;
+    private final HRTaskExecutorService m_taskExecutor = new HRTaskExecutorService();
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     @PostMapping("/job/extract")
@@ -24,8 +24,7 @@ public class HRSystemController {
         String reqType = (String)param.get("Type");
         String ext = (String)param.get("ext");
 
-        HRTaskExecutor task = new HRTaskExecutor(uuid, reqType, ext);
-        m_taskQueue.add(task);
+        m_taskExecutor.addTask(uuid, reqType, ext);
     }
 
     @GetMapping("/common/getUuid")
@@ -35,10 +34,4 @@ public class HRSystemController {
         return uuid;
     }
 
-    @Scheduled(fixedDelay = 100)
-    private void pollingTask() {
-        if (m_taskQueue.size() == 0) return;
-
-        // TODO : get first element and run task as taskExecutor
-    }
 }
