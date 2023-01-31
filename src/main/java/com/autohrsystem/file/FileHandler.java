@@ -1,6 +1,5 @@
 package com.autohrsystem.file;
 
-import com.autohrsystem.common.CommonApi;
 import com.autohrsystem.common.Error;
 import com.autohrsystem.common.ErrorCode;
 

@@ -2,13 +2,12 @@ package com.autohrsystem.executer;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import com.autohrsystem.common.CommonApi;
 import com.autohrsystem.common.Error;
 import com.autohrsystem.executer.task.OcrTask;
 import com.autohrsystem.file.FileHandler;
-import com.autohrsystem.structure.OcrParams;
+import com.autohrsystem.ocr.OcrParams;
 import io.vertx.core.json.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,11 +20,11 @@ import org.springframework.stereotype.Service;
 public class HRTaskExecutorService {
     @Autowired
     private Environment env;
-    // TODO : make request option as class
 
     @Autowired
     @Qualifier("OCRTaskExecutor")
     ThreadPoolTaskExecutor m_taskExecutor;
+    // TODO : make request option as class
     private final JsonObject TYPE_1_REQ_OPT = new JsonObject("");
     private final JsonObject TYPE_2_REQ_OPT = new JsonObject("");
 
@@ -69,7 +68,5 @@ public class HRTaskExecutorService {
         } else if (m_taskExecutor.getPoolSize() == m_taskExecutor.getMaxPoolSize()) {
             // TODO: throw Error
         }
-
-
     }
 }

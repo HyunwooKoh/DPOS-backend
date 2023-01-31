@@ -2,7 +2,6 @@ package com.autohrsystem.ocr;
 
 import com.autohrsystem.common.Error;
 import com.autohrsystem.common.ErrorCode;
-import com.autohrsystem.structure.OcrParams;
 
 import java.io.File;
 import java.io.FileWriter;
