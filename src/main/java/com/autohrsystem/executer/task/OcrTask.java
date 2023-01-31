@@ -1,18 +1,16 @@
 package com.autohrsystem.executer.task;
 
-import com.autohrsystem.common.CommonApi;
-import com.autohrsystem.common.Error;
 import com.autohrsystem.file.FileHandler;
+import com.autohrsystem.common.Error;
 import com.autohrsystem.ocr.OcrServiceClient;
 import com.autohrsystem.structure.OcrParams;
-import io.vertx.core.json.JsonObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 
 public class OcrTask implements Runnable {
     OcrParams m_ocrParams;
-    public OcrTask(OcrParams ocrParams) {
+    FileHandler m_fileHandler;
+    public OcrTask(OcrParams ocrParams, FileHandler handler) {
         m_ocrParams = ocrParams;
+        m_fileHandler = handler;
     }
 
     @Override
@@ -20,9 +18,8 @@ public class OcrTask implements Runnable {
         OcrServiceClient ocrServiceClient = new OcrServiceClient(m_ocrParams);
         try {
             // TODO: build file handler via ocrParams
-            fileHandler.getFile();
             ocrServiceClient.DoTask();
-            fileHandler.uploadResult();
+            m_fileHandler.uploadResult();
             // TODO : parse result
             // map<String, String> targetDatas
             // TODO : db insert
