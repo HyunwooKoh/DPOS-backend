@@ -3,7 +3,7 @@ package com.autohrsystem.executer.task;
 import com.autohrsystem.file.FileHandler;
 import com.autohrsystem.common.Error;
 import com.autohrsystem.ocr.OcrServiceClient;
-import com.autohrsystem.structure.OcrParams;
+import com.autohrsystem.ocr.OcrParams;
 
 public class OcrTask implements Runnable {
     OcrParams m_ocrParams;

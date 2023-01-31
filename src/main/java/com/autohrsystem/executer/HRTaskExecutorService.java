@@ -2,14 +2,12 @@ package com.autohrsystem.executer;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import com.autohrsystem.common.CommonApi;
 import com.autohrsystem.common.Error;
 import com.autohrsystem.executer.task.OcrTask;
 import com.autohrsystem.file.FileHandler;
-import com.autohrsystem.structure.OcrParams;
-import io.vertx.core.json.JsonObject;
+import com.autohrsystem.ocr.OcrParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
@@ -21,14 +19,9 @@ import org.springframework.stereotype.Service;
 public class HRTaskExecutorService {
     @Autowired
     private Environment env;
-    // TODO : make request option as class
-
     @Autowired
     @Qualifier("OCRTaskExecutor")
     ThreadPoolTaskExecutor m_taskExecutor;
-    private final JsonObject TYPE_1_REQ_OPT = new JsonObject("");
-    private final JsonObject TYPE_2_REQ_OPT = new JsonObject("");
-
     Queue<OcrTask> m_tasks;
 
     public HRTaskExecutorService() {
@@ -52,13 +45,7 @@ public class HRTaskExecutorService {
 
     private OcrParams buildOcrParam(String inputFilePath, String outputFilePath, String reqType) {
         OcrParams ocrParam = new OcrParams(inputFilePath, outputFilePath, env.getProperty("OCR_SERVER_URL"));
-        if (reqType == "type1") {
-            ocrParam.setReqOption(TYPE_1_REQ_OPT);
-        } else if (reqType == "type2") {
-            ocrParam.setReqOption(TYPE_2_REQ_OPT);
-        } else {
-            // TODO : insert task in db with failure status - invalid type
-        }
+        // TODO: set ocrParam's request option
         return ocrParam;
     }
 
@@ -69,7 +56,5 @@ public class HRTaskExecutorService {
         } else if (m_taskExecutor.getPoolSize() == m_taskExecutor.getMaxPoolSize()) {
             // TODO: throw Error
         }
-
-
     }
 }

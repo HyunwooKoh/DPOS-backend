@@ -1,4 +1,4 @@
-package com.autohrsystem.structure;
+package com.autohrsystem.ocr;
 
 import io.vertx.core.json.JsonObject;
 
