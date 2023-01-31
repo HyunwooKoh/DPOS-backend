@@ -33,15 +33,15 @@ public class FileHandler {
     private final String m_originFilePath;
     private final String m_resulFilePath;
     private final String m_fileServerUrl;
-    public FileHandler(String uuid, String ext) {
+    public FileHandler(String uuid, String ext, String inputFilePath, String outputFilePath) {
         m_uuid = uuid;
         m_ext = "." + ext;
-        m_originFilePath = CommonApi.getTempDir(uuid) + "origin" + m_ext;
-        m_resulFilePath = CommonApi.getTempDir(uuid) + "result.json";
+        m_originFilePath = inputFilePath;
+        m_resulFilePath = outputFilePath;
         m_fileServerUrl = env.getProperty("FILE_SERVER_URL") + "/files/";
     }
 
-    public String getIFile() throws Error {
+    public String getFile() throws Error {
         if (!checkFileIsExist(m_uuid + m_ext)) {
             throw new Error(ErrorCode.FSV_FILE_NOT_FOUND,"Cannot find file on server, ID : " + m_uuid);
         }
@@ -57,7 +57,7 @@ public class FileHandler {
         return m_originFilePath;
     }
 
-    public void uploadResult () throws Error {
+    public void uploadResult() throws Error {
         File result = new File(m_resulFilePath);
         if (!result.exists()) {
             throw new Error(ErrorCode.FILE_NOT_FOUND,"Cannot find file result json, path : " + m_resulFilePath);
