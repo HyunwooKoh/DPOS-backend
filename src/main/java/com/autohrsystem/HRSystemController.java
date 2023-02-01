@@ -24,7 +24,7 @@ public class HRSystemController {
         String reqType = (String)param.get("Type");
         String ext = (String)param.get("ext");
 
-        m_taskExecutor.addTask(uuid, reqType, ext);
+        m_taskExecutor.addTask(uuid, ext, reqType);
     }
 
     @GetMapping("/common/getUuid")
