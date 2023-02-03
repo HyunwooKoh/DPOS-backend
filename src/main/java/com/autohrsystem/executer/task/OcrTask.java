@@ -6,11 +6,17 @@ import com.autohrsystem.ocr.OcrServiceClient;
 import com.autohrsystem.ocr.OcrParams;
 
 public class OcrTask implements Runnable {
-    OcrParams m_ocrParams;
-    FileHandler m_fileHandler;
-    public OcrTask(OcrParams ocrParams, FileHandler handler) {
+    private final OcrParams m_ocrParams;
+    private final FileHandler m_fileHandler;
+    private final String m_uuid;
+    public OcrTask(OcrParams ocrParams, FileHandler handler, String uuid) {
         m_ocrParams = ocrParams;
         m_fileHandler = handler;
+        m_uuid = uuid;
+    }
+
+    public String getUuid() {
+        return this.m_uuid;
     }
 
     @Override
