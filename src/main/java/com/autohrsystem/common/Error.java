@@ -1,7 +1,5 @@
 package com.autohrsystem.common;
 
-import com.autohrsystem.common.ErrorCode;
-
 public class Error extends Throwable {
     private final int m_errorCode;
     private final String m_msg;
