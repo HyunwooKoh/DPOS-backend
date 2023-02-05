@@ -12,8 +12,8 @@ import com.autohrsystem.common.Error;
 import com.autohrsystem.executer.task.OcrTask;
 import com.autohrsystem.file.FileHandler;
 import com.autohrsystem.ocr.OcrParams;
-import com.autohrsystem.db.TaskEntity;
-import com.autohrsystem.db.TaskRepository;
+import com.autohrsystem.db.task.TaskEntity;
+import com.autohrsystem.db.task.TaskRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;

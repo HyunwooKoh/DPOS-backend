@@ -1,4 +1,4 @@
-package com.autohrsystem.db;
+package com.autohrsystem.db.task;
 
 import lombok.*;
 import jakarta.persistence.*;
