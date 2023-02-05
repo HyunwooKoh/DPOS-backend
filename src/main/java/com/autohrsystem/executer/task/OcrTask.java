@@ -1,5 +1,6 @@
 package com.autohrsystem.executer.task;
 
+import com.autohrsystem.db.documnet.ResumeEntity;
 import com.autohrsystem.db.task.TaskEntity;
 import com.autohrsystem.db.task.TaskRepository;
 import com.autohrsystem.file.FileHandler;
@@ -8,16 +9,20 @@ import com.autohrsystem.ocr.OcrServiceClient;
 import com.autohrsystem.ocr.OcrParams;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Objects;
+
 public class OcrTask implements Runnable {
     @Autowired
     TaskRepository taskRepository;
     private final OcrParams m_ocrParams;
     private final FileHandler m_fileHandler;
     private final String m_uuid;
-    public OcrTask(OcrParams ocrParams, FileHandler handler, String uuid) {
+    private final String m_reqType;
+    public OcrTask(OcrParams ocrParams, FileHandler handler, String uuid, String reqType) {
         m_ocrParams = ocrParams;
         m_fileHandler = handler;
         m_uuid = uuid;
+        m_reqType = reqType;
     }
 
     public String getUuid() {
@@ -33,7 +38,12 @@ public class OcrTask implements Runnable {
             ocrServiceClient.DoTask();
             m_fileHandler.uploadResult();
             // TODO : parse result
-            // map<String, String> targetDatas
+            if (Objects.equals(m_reqType, "resume")) {
+                // map<String, String> targetDatas
+                // ResumeEntity result = new ResumeEntity("")
+            } else if (Objects.equals(m_reqType, "")) {
+
+            }
             entity.setStatus("Success");
         } catch (Error e) {
             entity.setStatus("Failure");

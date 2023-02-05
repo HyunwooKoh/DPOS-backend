@@ -73,7 +73,7 @@ public class OCRTaskExecutorService {
         } else {
             try {
                 fileHandler.getFile(); // TODO : Do we need to use fileHandler job as threadPoolExecutor?
-                OcrTask task = new OcrTask(param, fileHandler, uuid);
+                OcrTask task = new OcrTask(param, fileHandler, uuid, reqType);
                 if (m_taskExecutor.getQueueSize() == 0) {
                     entity.setStatus("Processing");
                     m_taskExecutor.execute(task); // TODO : Do we need use submit?
