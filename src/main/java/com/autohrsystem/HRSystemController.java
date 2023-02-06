@@ -2,7 +2,7 @@ package com.autohrsystem;
 
 import com.autohrsystem.common.CommonApi;
 
-import com.autohrsystem.executer.HRTaskExecutorService;
+import com.autohrsystem.executer.OCRTaskExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 public class HRSystemController {
-    private final HRTaskExecutorService m_taskExecutor = new HRTaskExecutorService();
+    private final OCRTaskExecutorService m_taskExecutor = new OCRTaskExecutorService();
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     @PostMapping("/job/extract")
