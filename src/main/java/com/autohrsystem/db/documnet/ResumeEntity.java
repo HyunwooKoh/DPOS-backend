@@ -10,8 +10,7 @@ import lombok.*;
 @Entity(name="Resume")
 public class ResumeEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long PId;
+    private long uuid;
 
     @Column(nullable = false)
     private boolean experienced;
