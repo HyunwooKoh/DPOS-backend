@@ -2,14 +2,16 @@ package com.autohrsystem.common;
 
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+
 public class CommonApi {
-    public static String generateTempPath() {
-        return UUID.randomUUID().toString();
-    }
+    @Autowired
+    private static Environment env;
 
     public static String getTempDir(String uuid) {
-        // TEMPDIR + "/" + uuid + "/";
-        return "";
+        String tempDir = env.getProperty("HOME").toString() + uuid + "/";
+        return tempDir;
     }
 
     public static String generateUuid() {

@@ -147,7 +147,6 @@ public class FileHandler {
 
     private boolean checkFileIsExist(String targetFile) {
         try {
-            // TODO : use ENV for file server Address
             UriComponents uri = UriComponentsBuilder.fromHttpUrl(m_fileServerUrl).build();
             ResponseEntity<?> resultMap = new RestTemplate().exchange(
                     uri.toString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Object.class);
