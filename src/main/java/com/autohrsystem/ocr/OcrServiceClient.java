@@ -102,6 +102,12 @@ public class OcrServiceClient {
             if (response.getJsonObject("response").getString("status").equals("success")) {
                 break;
             }
+
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                continue;
+            }
         }
 
         if (tryCount == MAX_RECURSION) {

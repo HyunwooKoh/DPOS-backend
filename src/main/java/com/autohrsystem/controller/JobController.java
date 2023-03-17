@@ -1,6 +1,8 @@
 package com.autohrsystem.controller;
 
 import com.autohrsystem.common.CommonApi;
+import com.autohrsystem.db.task.TaskEntity;
+import com.autohrsystem.db.task.TaskRepository;
 import com.autohrsystem.executer.OCRTaskExecutorService;
 import com.autohrsystem.controller.Dto.JobDto;
 
@@ -25,6 +27,8 @@ public class JobController {
         this.ocrTaskExecutorService = ocrTaskExecutorService;
     }
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+    @Autowired
+    TaskRepository taskRepository;
 
     @SneakyThrows
     private void transferTo(MultipartFile multipartFile, String uuid, String ext) {
@@ -53,8 +57,9 @@ public class JobController {
     @GetMapping(value = "/status")
     public JobDto.StatusResponse checkTaskStatus(@RequestBody JobDto.JobStatusDto dto) {
         JobDto.StatusResponse res = new JobDto.StatusResponse();
-        res.setUuid("");
-        res.setStatus("");
+        TaskEntity entity = taskRepository.findByUuid(dto.getUuid());
+        res.setUuid(entity.getUuid());
+        res.setStatus(entity.getStatus());
         return res;
     }
 }
