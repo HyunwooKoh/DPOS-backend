@@ -1,8 +1,9 @@
 package com.autohrsystem.executer.task;
 
 import com.autohrsystem.common.ErrorCode;
-import com.autohrsystem.db.task.TaskEntity;
-import com.autohrsystem.db.task.TaskRepository;
+import com.autohrsystem.db.RepoManager;
+import com.autohrsystem.db.task.*;
+
 import com.autohrsystem.common.Error;
 import com.autohrsystem.ocr.OcrServiceClient;
 import com.autohrsystem.ocr.OcrParams;
@@ -16,14 +17,16 @@ import org.slf4j.LoggerFactory;
 public class OcrTask implements Runnable {
     Logger logger = LoggerFactory.getLogger(getClass());
     private final TaskRepository m_taskRepository;
+    private final RepoManager m_repoManager;
     private final OcrParams m_ocrParams;
     private final String m_uuid;
     private final String m_reqType;
-    public OcrTask(OcrParams ocrParams, String uuid, String reqType, TaskRepository taskRepository) {
+    public OcrTask(OcrParams ocrParams, String uuid, String reqType, TaskRepository taskRepository, RepoManager parser) {
         m_ocrParams = ocrParams;
         m_uuid = uuid;
         m_reqType = reqType;
         m_taskRepository = taskRepository;
+        m_repoManager = parser;
     }
 
     public String getUuid() {

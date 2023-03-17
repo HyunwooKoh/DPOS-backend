@@ -28,7 +28,7 @@ public class JobController {
 
     @SneakyThrows
     private void transferTo(MultipartFile multipartFile, String uuid, String ext) {
-        multipartFile.transferTo(new File(CommonApi.getAndCreateTempDir(uuid) + "origin" + ext ));
+        multipartFile.transferTo(new File(CommonApi.CreateAndGetTempDir(uuid) + "origin" + ext ));
     }
 
     @PostMapping(value = "/extract", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})

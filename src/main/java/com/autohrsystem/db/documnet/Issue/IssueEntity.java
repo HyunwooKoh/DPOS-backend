@@ -12,10 +12,9 @@ import lombok.*;
 public class IssueEntity {
     @Id
     private String uuid;
-
     @Column(nullable = false)
+    private String allText;
     private String errorCode;
-
     @Column
     private String errorMsg;
 }

@@ -10,7 +10,7 @@ public class CommonApi {
     @Autowired
     private static Environment env;
 
-    public static String getAndCreateTempDir(String uuid) {
+    public static String CreateAndGetTempDir(String uuid) {
         String tempDirPath = env.getProperty("HOME").toString() + uuid + "/";
         File tempDir = new File(tempDirPath);
         if (!tempDir.exists()) {

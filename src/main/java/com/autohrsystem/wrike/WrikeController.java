@@ -40,7 +40,7 @@ public class WrikeController {
 		String uuid = CommonApi.generateUuid();
 		String fileName = multipartFile.getOriginalFilename();
 		String ext = fileName.substring(fileName.lastIndexOf('.'));
-		File input = new File(CommonApi.getAndCreateTempDir(uuid) + "origin" + ext);
+		File input = new File(CommonApi.CreateAndGetTempDir(uuid) + "origin" + ext);
 		multipartFile.transferTo(input);
 		return input;
 	}
