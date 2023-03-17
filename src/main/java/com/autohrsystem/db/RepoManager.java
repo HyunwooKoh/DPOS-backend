@@ -70,6 +70,7 @@ public class RepoManager {
             res.put("ErrorCode", errorCode);
             res.put("ErrorMessage", errorMsg);
             IssueEntity entity = new IssueEntity(uuid, content, errorCode, errorMsg);
+            m_issueRepository.save(entity);
         }
         return res;
     }
