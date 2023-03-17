@@ -69,9 +69,9 @@ public class WrikeService {
 
 		public String regularFormat() {
 			return String.format("""
-     				errorCode: %s
-     				message: %s
-     				allTexts: %s 
+     				errorCode: %s\n
+     				message: %s\n
+     				allTexts: %s\n
 					"""
 				, errorCode, message, allTexts);
 		}
