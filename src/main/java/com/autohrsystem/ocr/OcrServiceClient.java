@@ -2,25 +2,23 @@ package com.autohrsystem.ocr;
 
 import com.autohrsystem.common.Error;
 import com.autohrsystem.common.ErrorCode;
-
+import io.vertx.core.json.JsonObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Objects;
-
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.client.MultipartBodyBuilder;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import io.vertx.core.json.JsonObject;
-import reactor.core.publisher.Mono;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class OcrServiceClient {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -54,7 +52,7 @@ public class OcrServiceClient {
 		bodyBuilder.part("ReqOption", m_param.m_reqOption);
 
 		logger.info("send /push request...");
-		JsonObject response = exchangePushRequest(bodyBuilder).block();
+		JsonObject response = exchangePushRequest(bodyBuilder);
 		if (response == null || response.isEmpty()) {
 			throw new Error(ErrorCode.OCR_PUSH_ERROR, "Push response is null or empty.");
 		} else if (response.getString("Code") == null || response.getString("Message") == null) {
@@ -71,26 +69,15 @@ public class OcrServiceClient {
 		return response.getString("Message");
 	}
 
-	private Mono<JsonObject> exchangePushRequest(MultipartBodyBuilder bodyBuilder) throws Error{
-		return WebClient
-				.create()
-				.method(HttpMethod.POST)
-				.uri(m_param.m_serverUrl + "/push")
-				.contentType(MediaType.MULTIPART_FORM_DATA)
-				.body(BodyInserters.fromMultipartData(bodyBuilder.build()))
-				.exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonObject.class)
-						.map(validReqVo -> {
-							if (clientResponse.statusCode().is2xxSuccessful()) {
-								logger.info("");
-								return validReqVo;
-							} else if (clientResponse.statusCode().is4xxClientError()) {
-								logger.error("4xx error occur during pull request.");
-							} else {
-								logger.error("5xx error occur during pull request.");
-							}
-							return new JsonObject();
-						})
-				);
+	private JsonObject exchangePushRequest(MultipartBodyBuilder bodyBuilder) throws Error {
+		UriComponents uriBuilder = UriComponentsBuilder.fromUriString(m_param.m_serverUrl + "/push")
+			.build();
+		RequestEntity<MultiValueMap<String, HttpEntity<?>>> entity = RequestEntity.post(
+				uriBuilder.toUriString())
+			.body(bodyBuilder.build());
+
+		RestTemplate restTemplate = new RestTemplate();
+		return restTemplate.exchange(entity, JsonObject.class).getBody();
 	}
 
     protected void pull(String taskID) throws Error {
@@ -105,7 +92,7 @@ public class OcrServiceClient {
 		int tryCount = 0;
 		for (; tryCount < MAX_RECURSION; tryCount++) {
 			logger.info("send /pull request... tryCount : " + tryCount);
-			response = exchangePullRequest(body).block();
+			response = exchangePullRequest(body);
 			if (response == null || response.isEmpty()) {
 				throw new Error(ErrorCode.OCR_PULL_ERROR, "Pull response is null or empty.");
 			} else if (response.getJsonObject("response") == null) {
@@ -137,24 +124,14 @@ public class OcrServiceClient {
 		}
 	}
 
-    protected Mono<JsonObject> exchangePullRequest(JsonObject body) {
-		return WebClient
-				.create()
-				.method(HttpMethod.POST)
-				.uri(m_param.m_serverUrl + "/pull")
-				.contentType(MediaType.APPLICATION_JSON)
-				.bodyValue(body)
-				.exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonObject.class)
-						.map(validReqVo -> {
-							if (clientResponse.statusCode().is2xxSuccessful()) {
-								return validReqVo;
-							} else if (clientResponse.statusCode().is4xxClientError()) {
-								logger.error("4xx error occur during pull request.");
-							} else {
-								logger.error("5xx error occur during pull request.");
-							}
-							return new JsonObject();
-						})
-				);
+    protected JsonObject exchangePullRequest(JsonObject body) {
+		UriComponents uriBuilder = UriComponentsBuilder.fromUriString(m_param.m_serverUrl + "/pull")
+			.build();
+		RequestEntity<String> entity = RequestEntity.post(uriBuilder.toUriString())
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(body.toString());
+
+		RestTemplate restTemplate = new RestTemplate();
+		return restTemplate.exchange(entity, JsonObject.class).getBody();
 	}
 }
