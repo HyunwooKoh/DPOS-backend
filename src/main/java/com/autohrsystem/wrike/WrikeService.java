@@ -66,9 +66,7 @@ public class WrikeService {
 
 		public String regularFormat() {
 			return String.format("""
-     				errorCode: %s\n
-     				message: %s\n
-     				allTexts: %s\n
+     				<b>errorCode</b>: %s <br><b>message</b>: %s <br><b>allTexts</b>: %s <br>
 					"""
 				, errorCode, message, allTexts);
 		}
@@ -107,7 +105,7 @@ public class WrikeService {
 	}
 
 	public WrikeResponse createTask(String title, String contents) {
-		String folderId = "IEAAOKQMI46CCVUM";
+		String folderId = "IEAAOKQMI5AFMUJC";
 		String url = String.format("https://www.wrike.com/api/v4/folders/%s/tasks", folderId);
 
 		UriComponents build = UriComponentsBuilder.fromUriString(url)
