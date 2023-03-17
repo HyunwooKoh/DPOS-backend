@@ -39,9 +39,6 @@ public class WrikeService {
 	private final String token;
 
 	@Autowired
-	private Environment env;
-
-	@Autowired
 	private RepoManager repoManager;
 
 	@Setter
@@ -95,7 +92,7 @@ public class WrikeService {
 	private OcrResponse getOcrResponse(File image, String reqType) {
 		OcrParams param = new OcrParams(image.getAbsolutePath(),
 			null,
-			env.getProperty("OCR_SERVER_URL"));
+				System.getenv("OCR_SERVER_URL"));
 		param.setReqOption(reqType);
 		return new OcrServiceClient(param).DoTask(this::convert);
 	}

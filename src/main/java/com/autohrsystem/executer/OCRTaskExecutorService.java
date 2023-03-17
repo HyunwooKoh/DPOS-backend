@@ -24,16 +24,11 @@ import org.springframework.core.env.Environment;
 
 @Service
 public class OCRTaskExecutorService {
-    @Autowired
-    private Environment env;
     final ThreadPoolTaskExecutor m_taskExecutor;
-
     @Autowired
     TaskRepository m_taskRepository;
-
     @Autowired
     RepoManager m_repoManager;
-
     Queue<OcrTask> m_tasks;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -63,7 +58,7 @@ public class OCRTaskExecutorService {
         String inputFilePath = CommonApi.getTempDir(uuid) + "origin" + ext;
         String outputFilePath = CommonApi.getTempDir(uuid) + "result.json";
         //FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath);
-        OcrParams param = new OcrParams(inputFilePath, outputFilePath, env.getProperty("OCR_SERVER_URL"));
+        OcrParams param = new OcrParams(inputFilePath, outputFilePath, System.getenv("OCR_SERVER_URL"));
         TaskEntity entity = new TaskEntity(uuid, "waiting", inputFilePath, outputFilePath);
 
         if (!reqType.isEmpty() && !param.isValidReqType(reqType)) {
@@ -73,7 +68,7 @@ public class OCRTaskExecutorService {
             entity.setErrorMsg("Invalid request type");
         } else {
             param.setReqOption(reqType);
-            OcrTask task = new OcrTask(param, uuid, reqType, m_taskRepository, m_repoManager);
+            OcrTask task = new OcrTask(param, uuid, reqType, m_repoManager);
             if (m_taskExecutor.getQueueSize() == 0) {
                 entity.setStatus("Processing");
                 m_taskRepository.save(entity);

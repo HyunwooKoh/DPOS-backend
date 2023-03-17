@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 
 
 public class FileHandler {
-    @Autowired
-    private Environment env;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final String m_uuid;
     private final String m_ext;
@@ -37,7 +35,7 @@ public class FileHandler {
         m_ext = "." + ext;
         m_originFilePath = inputFilePath;
         m_resulFilePath = outputFilePath;
-        m_fileServerUrl = env.getProperty("FILE_SERVER_URL") + "/files/";
+        m_fileServerUrl = System.getenv("FILE_SERVER_URL") + "/files/";
     }
 
     public String getFile() throws Error {

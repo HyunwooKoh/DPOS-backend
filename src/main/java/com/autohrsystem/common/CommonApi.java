@@ -11,7 +11,7 @@ public class CommonApi {
     private static Environment env;
 
     public static String CreateAndGetTempDir(String uuid) {
-        String tempDirPath = env.getProperty("HOME").toString() + uuid + "/";
+        String tempDirPath = System.getenv("HOME") + "/" + uuid + "/";
         File tempDir = new File(tempDirPath);
         if (!tempDir.exists()) {
             try{
@@ -24,8 +24,7 @@ public class CommonApi {
     }
 
     public static String getTempDir(String uuid) {
-        String tempDir = env.getProperty("HOME").toString() + uuid + "/";
-        return tempDir;
+        return System.getenv("HOME") + "/" + uuid + "/";
     }
 
     public static String generateUuid() {
