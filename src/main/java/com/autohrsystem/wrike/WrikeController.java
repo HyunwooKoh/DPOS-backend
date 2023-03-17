@@ -1,10 +1,12 @@
 package com.autohrsystem.wrike;
 
 import com.autohrsystem.common.CommonApi;
-import com.autohrsystem.controller.JobController.ExtractBody;
+
 import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.autohrsystem.controller.Dto.JobDto;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -20,7 +22,7 @@ public class WrikeController {
 	WrikeService wrikeService;
 
 	@RequestMapping(value = "/issue/help", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-	public ResponseEntity<String> issue(ExtractBody dto) {
+	public ResponseEntity<String> issue(JobDto.JobRequestForm dto) {
 		List<File> images = dto.getFiles().stream()
 			.map(this::transferTo)
 			.collect(Collectors.toList());
