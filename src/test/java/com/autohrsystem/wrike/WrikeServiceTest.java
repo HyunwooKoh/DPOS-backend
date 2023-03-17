@@ -1,6 +1,9 @@
 package com.autohrsystem.wrike;
 
+import com.autohrsystem.wrike.WrikeService.WrikeResponse;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,8 +21,11 @@ class WrikeServiceTest {
 	private WrikeService wrikeService;
 
 	@Test
-	public void createTask() {
-		Map<String, Object> response = wrikeService.createTask("test", "this is test");
-		Assertions.assertThat(response).isNotEmpty();
+	public void createTask() throws ExecutionException, InterruptedException {
+		WrikeResponse finalResponse =
+			CompletableFuture.supplyAsync(() -> wrikeService.createTask("test", "this is test"))
+			.thenApply(wrikeResponse -> wrikeService.uploadAttachment(wrikeResponse.getTaskId()))
+			.get();
+		Assertions.assertThat(finalResponse).isNotNull();
 	}
 }
