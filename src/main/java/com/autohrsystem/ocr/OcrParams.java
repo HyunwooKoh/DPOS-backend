@@ -40,7 +40,7 @@ public class OcrParams {
 
             searchAPI.put("Type","FindLine");
             searchAPI.put("Name","ErrorCode");
-            keys.add("BEP");
+            keys.add("BSD");
             searchAPI.put("Key",keys);
             searchAPIArr.add(searchAPI);
             m_reqOption.put("SearchAPI", searchAPIArr);

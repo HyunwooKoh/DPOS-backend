@@ -60,8 +60,10 @@ public class RepoManager {
                 String fieldContent = fields.getJsonObject(i).getString("content");
                 if (fieldContent.contains("BSD")) {
                     int startIdx = fieldContent.indexOf("BSD");
-                    errorCode = fieldContent.substring(startIdx, startIdx + 8);
-                    errorMsg = fieldContent.substring(startIdx + 9);
+                    errorCode = fieldContent.substring(startIdx, startIdx + 9);
+                    if (startIdx + 10 < fieldContent.length()) {
+                        errorMsg = fieldContent.substring(startIdx + 10);
+                    }
                     break;
                 }
             }
@@ -69,7 +71,7 @@ public class RepoManager {
             res.put("content", content);
             res.put("ErrorCode", errorCode);
             res.put("ErrorMessage", errorMsg);
-            IssueEntity entity = new IssueEntity(uuid, content, errorCode, errorMsg);
+            IssueEntity entity = new IssueEntity(uuid, errorCode, errorMsg);
             m_issueRepository.save(entity);
         }
         return res;

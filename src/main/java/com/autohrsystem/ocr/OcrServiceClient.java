@@ -52,7 +52,7 @@ public class OcrServiceClient {
         MultiValueMap<String, Object> requestBody = new LinkedMultiValueMap<>();
         requestBody.add("ReqFile", new FileSystemResource(inputFile));
         requestBody.add("ReqType", REQ_DOCUMENT);
-        requestBody.add("ReqOption", m_param.m_reqOption);
+        requestBody.add("ReqOption", m_param.m_reqOption.toString());
 
         logger.info("send /push request...");
         JsonObject response = exchangePushRequest(requestBody);
