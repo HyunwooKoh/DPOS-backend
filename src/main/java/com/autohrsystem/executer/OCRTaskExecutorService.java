@@ -3,6 +3,7 @@ package com.autohrsystem.executer;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +28,7 @@ import org.springframework.core.env.Environment;
 public class OCRTaskExecutorService {
     @Autowired
     private Environment env;
-    @Autowired
-    @Qualifier("OCRTaskExecutor")
-    ThreadPoolTaskExecutor m_taskExecutor;
+    final ThreadPoolTaskExecutor m_taskExecutor;
 
     @Autowired
     TaskRepository taskRepository;
@@ -37,7 +36,8 @@ public class OCRTaskExecutorService {
     Queue<OcrTask> m_tasks;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public OCRTaskExecutorService() {
+    public OCRTaskExecutorService(@Qualifier("OCRTaskExecutor")ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+        m_taskExecutor = threadPoolTaskExecutor;
         m_tasks = new LinkedList<>();
     }
 
@@ -59,33 +59,28 @@ public class OCRTaskExecutorService {
     }
     @Async
     public void addTask(String uuid, String ext, String reqType) {
-        String inputFilePath = CommonApi.getTempDir(uuid) + "origin." + ext;
+        String inputFilePath = CommonApi.getTempDir(uuid) + "origin" + ext;
         String outputFilePath = CommonApi.getTempDir(uuid) + "result.json";
-        FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath);
+        //FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath);
         OcrParams param = new OcrParams(inputFilePath, outputFilePath, env.getProperty("OCR_SERVER_URL"));
         TaskEntity entity = new TaskEntity(uuid, "waiting", inputFilePath, outputFilePath);
 
-        if (!reqType.isEmpty() && param.isValidReqType(reqType)) {
+        if (!reqType.isEmpty() && !param.isValidReqType(reqType)) {
             logger.error("Invalid reqType. uuid : " + uuid + ", reqType : " + reqType);
             entity.setStatus("Failure");
             entity.setErrorCode(ErrorCode.OCR_INVALID_REQ_TYPE);
             entity.setErrorMsg("Invalid request type");
         } else {
-            try {
-                fileHandler.getFile(); // TODO : Do we need to use fileHandler job as threadPoolExecutor?
-                OcrTask task = new OcrTask(param, fileHandler, uuid, reqType);
-                if (m_taskExecutor.getQueueSize() == 0) {
-                    entity.setStatus("Processing");
-                    m_taskExecutor.execute(task); // TODO : Do we need use submit?
-                } else {
-                    m_tasks.add(task);
-                }
-            } catch (Error e) {
-                entity.setStatus("Failure");
-                entity.setErrorCode(e.code());
-                entity.setErrorMsg(e.getMessage());
+            param.setReqOption(reqType);
+            OcrTask task = new OcrTask(param, uuid, reqType, taskRepository);
+            if (m_taskExecutor.getQueueSize() == 0) {
+                entity.setStatus("Processing");
+                taskRepository.save(entity);
+                m_taskExecutor.execute(task); // TODO : Do we need use submit?
+            } else {
+                m_tasks.add(task);
+                taskRepository.save(entity);
             }
-            taskRepository.save(entity);
         }
     }
 }
