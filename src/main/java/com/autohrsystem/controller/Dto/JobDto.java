@@ -35,4 +35,12 @@ public class JobDto {
         private String uuid;
         private String Status;
     }
+
+    @Setter
+    @Getter
+    public static class ErrorResponse {
+        private String uuid;
+        private String ErrorMsg;
+        private int errorCode;
+    }
 }
