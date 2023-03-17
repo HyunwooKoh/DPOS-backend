@@ -10,6 +10,7 @@ public class OcrParams {
 
     private static final String REQ_TYPE_1 = "Type1";
     private static final String REQ_TYPE_2 = "Type2";
+    private static final String REQ_TYPE_3 = "Type3";
 
     public OcrParams(String inputUri, String outputUri, String serverUrl) {
         m_inputUri = inputUri;
@@ -19,7 +20,7 @@ public class OcrParams {
 
     public boolean isValidReqType(String reqType) {
         return switch (reqType) {
-            case REQ_TYPE_1, REQ_TYPE_2 -> true;
+            case REQ_TYPE_1, REQ_TYPE_2, REQ_TYPE_3 -> true;
             default -> false;
         };
     }
@@ -30,6 +31,16 @@ public class OcrParams {
             m_reqOption = new JsonObject();
         } else if (reqType.equals(REQ_TYPE_2)) {
             m_reqOption = new JsonObject();
+        } else if (reqType.equals(REQ_TYPE_3)) {
+            String jsonString = """
+                    "SearchAPI" : [
+                    {
+                         "Type" : "FindLine",
+                         "Name" : "ErrorCode",
+                         "Key"  : ["BEP"]
+                    }]
+                    """;
+            m_reqOption = new JsonObject(jsonString);
         }
     }
 }
