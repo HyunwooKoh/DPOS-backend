@@ -1,17 +1,20 @@
 package com.autohrsystem.executer.task;
 
-import com.autohrsystem.db.documnet.ResumeEntity;
+import com.autohrsystem.common.ErrorCode;
 import com.autohrsystem.db.task.TaskEntity;
 import com.autohrsystem.db.task.TaskRepository;
-import com.autohrsystem.file.FileHandler;
 import com.autohrsystem.common.Error;
 import com.autohrsystem.ocr.OcrServiceClient;
 import com.autohrsystem.ocr.OcrParams;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Objects;
+import io.vertx.core.json.JsonObject;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OcrTask implements Runnable {
+    Logger logger = LoggerFactory.getLogger(getClass());
     private final TaskRepository m_taskRepository;
     private final OcrParams m_ocrParams;
     private final String m_uuid;
@@ -33,7 +36,7 @@ public class OcrTask implements Runnable {
         TaskEntity entity = m_taskRepository.findByUuid(m_uuid);
         try {
             // TODO: build file handler via ocrParams
-            ocrServiceClient.DoTask();
+            ocrServiceClient.DoTask(this::exportFile);
             // TODO : m_fileHandler.uploadResult();
             // TODO : parse result
             if (m_reqType.equals("Type1")) {
@@ -52,6 +55,28 @@ public class OcrTask implements Runnable {
             entity.setErrorMsg(e.getMessage());
         }
         m_taskRepository.save(entity);
+    }
+
+    private Void exportFile(JsonObject response) {
+        File resultJson = null;
+        try {
+            resultJson = new File(m_ocrParams.m_outputUri);
+            if (resultJson.exists()) {
+                throw new Error(ErrorCode.OCR_RESULT_EXIST, "Result json already exist. path : " + resultJson.getAbsolutePath());
+            }
+
+            if (!resultJson.createNewFile()) {
+                throw new Error(ErrorCode.OCR_RESULT_SAVE, "Error occur during create file. path : " + resultJson.getAbsolutePath());
+            }
+            FileWriter file = new FileWriter(resultJson.getAbsolutePath());
+            file.write(response.toString());
+            file.flush();
+            file.close();
+        } catch (IOException | Error e) {
+            logger.error("Error Occur during save ocr result json. path : " + resultJson.getAbsolutePath());
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
 }

@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.util.Map;
 import java.util.Objects;
 
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -40,9 +41,9 @@ public class OcrServiceClient {
         return url + (url.endsWith("/") ? "" : "/") + path;
     }
 
-    public void DoTask() throws Error {
+    public <R> R DoTask(Function<JsonObject, R> handler) throws Error {
         String taskID = push();
-        pull(taskID);
+        return handler.apply(pull(taskID));
     }
 
     /*{"Code": "OK", "Message": "TASK-ID"}*/
@@ -82,12 +83,7 @@ public class OcrServiceClient {
         return new JsonObject(restTemplate.exchange(entity, String.class).getBody());
     }
 
-    protected void pull(String taskID) throws Error {
-        File resultJson = new File(m_param.m_outputUri);
-        if (resultJson.exists()) {
-            throw new Error(ErrorCode.OCR_RESULT_EXIST, "Result json already exist. path : " + resultJson.getAbsolutePath());
-        }
-
+    protected JsonObject pull(String taskID) throws Error {
         JsonObject response = new JsonObject();
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("TaskID", taskID);
@@ -111,19 +107,7 @@ public class OcrServiceClient {
         if (tryCount == MAX_RECURSION) {
             throw new Error(ErrorCode.OCR_PULL_ERROR, "Pull request max tried. task ID : " + taskID);
         }
-
-        try {
-            if (!resultJson.createNewFile()) {
-                throw new Error(ErrorCode.OCR_RESULT_SAVE, "Error occur during create file. path : " + resultJson.getAbsolutePath());
-            }
-            FileWriter file = new FileWriter(resultJson.getAbsolutePath());
-            file.write(response.toString());
-            file.flush();
-            file.close();
-        } catch (IOException e) {
-            logger.error("Error Occur during save ocr result json. path : " + resultJson.getAbsolutePath());
-            throw new RuntimeException(e);
-        }
+        return response;
     }
 
     protected JsonObject exchangePullRequest(MultiValueMap<String, Object> bodyBuilder) {

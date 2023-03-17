@@ -1,6 +1,10 @@
 package com.autohrsystem.wrike;
 
+import com.autohrsystem.ocr.OcrParams;
+import com.autohrsystem.ocr.OcrServiceClient;
+import io.vertx.core.json.JsonObject;
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -12,6 +16,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -31,9 +36,13 @@ public class WrikeService {
 
 	private final String token;
 
+	@Autowired
+	private Environment env;
+
 	@Setter
 	@Getter
 	public static class WrikeResponse {
+
 		String kind;
 		List<Map<String, Object>> data;
 
@@ -42,9 +51,32 @@ public class WrikeService {
 		}
 	}
 
+	@Getter
+	@Setter
+	static class OcrResponse {
+		String errorCode;
+		String message;
+		String allTexts;
+
+	}
+
 	@Autowired
 	public WrikeService(@Value("${wrike.token}") String tokenPath) {
 		this.token = readToken(Path.of(tokenPath));
+	}
+
+	public URI issue(List<File> images, String reqType) {
+		images.stream()
+			.map(image -> getOcrResponse(image, reqType));
+		return null;
+	}
+
+	private OcrResponse getOcrResponse(File image, String reqType) {
+		OcrParams param = new OcrParams(image.getAbsolutePath(),
+			null,
+			env.getProperty("OCR_SERVER_URL"));
+		param.setReqOption(reqType);
+		return new OcrServiceClient(param).DoTask(response -> new OcrResponse());
 	}
 
 	public WrikeResponse createTask(String title, String contents) {
