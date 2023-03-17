@@ -55,7 +55,7 @@ public class JobController {
     }
 
     @GetMapping(value = "/status")
-    public JobDto.StatusResponse checkTaskStatus(@RequestBody JobDto.JobStatusDto dto) {
+    public JobDto.StatusResponse checkTaskStatus(@RequestBody JobDto.JobStatusJto dto) {
         JobDto.StatusResponse res = new JobDto.StatusResponse();
         TaskEntity entity = taskRepository.findByUuid(dto.getUuid());
         res.setUuid(entity.getUuid());

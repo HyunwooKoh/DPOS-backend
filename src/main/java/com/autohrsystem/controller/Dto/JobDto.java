@@ -1,8 +1,6 @@
 package com.autohrsystem.controller.Dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -18,8 +16,10 @@ public class JobDto {
 
     @Getter
     @Setter
+    @Builder
+    @NoArgsConstructor
     @AllArgsConstructor
-    public class JobStatusDto {
+    public static class JobStatusJto {
         private String uuid;
     }
 
