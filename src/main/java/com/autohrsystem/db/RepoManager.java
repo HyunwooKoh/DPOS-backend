@@ -5,6 +5,7 @@ import com.autohrsystem.db.documnet.Issue.IssueRepository;
 import com.autohrsystem.db.documnet.Issue.IssueEntity;
 import com.autohrsystem.db.documnet.PrsInfo.PrsInfoRepository;
 import com.autohrsystem.db.documnet.Resume.ResumeRepository;
+import com.autohrsystem.db.task.TaskEntity;
 import com.autohrsystem.db.task.TaskRepository;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -19,13 +20,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RepoManager {
     @Autowired
-    private final TaskRepository m_taskRepository;
+    private final TaskRepository taskRepository;
     @Autowired
-    private final IssueRepository m_issueRepository;
+    private final IssueRepository issueRepository;
     @Autowired
-    private final PrsInfoRepository m_prsInfoRepository;
+    private final PrsInfoRepository prsInfoRepository;
     @Autowired
-    private final ResumeRepository m_TaskRepository;
+    private final ResumeRepository resumeRepository;
+
+    public TaskEntity findTaskEntityByUuid(String uuid) {
+        return taskRepository.findByUuid(uuid);
+    }
+
+    public TaskEntity saveTaskEntity(TaskEntity entity) {
+        return taskRepository.save(entity);
+    }
 
     public Map<String, String> parse(String data, String reqType) {
         if (reqType.equals("Type1")) {
@@ -72,7 +81,7 @@ public class RepoManager {
             res.put("ErrorCode", errorCode);
             res.put("ErrorMessage", errorMsg);
             IssueEntity entity = new IssueEntity(uuid, errorCode, errorMsg);
-            m_issueRepository.save(entity);
+            issueRepository.save(entity);
         }
         return res;
     }

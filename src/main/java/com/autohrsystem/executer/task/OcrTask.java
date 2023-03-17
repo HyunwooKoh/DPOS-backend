@@ -16,17 +16,15 @@ import org.slf4j.LoggerFactory;
 
 public class OcrTask implements Runnable {
     Logger logger = LoggerFactory.getLogger(getClass());
-    private final TaskRepository m_taskRepository;
-    private final RepoManager m_repoManager;
+    private final RepoManager repoManager;
     private final OcrParams m_ocrParams;
     private final String m_uuid;
     private final String m_reqType;
-    public OcrTask(OcrParams ocrParams, String uuid, String reqType, TaskRepository taskRepository, RepoManager parser) {
+    public OcrTask(OcrParams ocrParams, String uuid, String reqType, RepoManager parser) {
         m_ocrParams = ocrParams;
         m_uuid = uuid;
         m_reqType = reqType;
-        m_taskRepository = taskRepository;
-        m_repoManager = parser;
+        repoManager = parser;
     }
 
     public String getUuid() {
@@ -36,7 +34,7 @@ public class OcrTask implements Runnable {
     @Override
     public void run() {
         OcrServiceClient ocrServiceClient = new OcrServiceClient(m_ocrParams);
-        TaskEntity entity = m_taskRepository.findByUuid(m_uuid);
+        TaskEntity entity = repoManager.findTaskEntityByUuid(m_uuid);
         try {
             // TODO: build file handler via ocrParams
             ocrServiceClient.DoTask(this::exportFile);
@@ -56,7 +54,7 @@ public class OcrTask implements Runnable {
             entity.setErrorCode(e.code());
             entity.setErrorMsg(e.getMessage());
         }
-        m_taskRepository.save(entity);
+        repoManager.saveTaskEntity(entity);
     }
 
     private Void exportFile(JsonObject response) {
