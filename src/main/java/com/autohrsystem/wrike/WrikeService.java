@@ -66,13 +66,13 @@ public class WrikeService {
 		return response.getBody();
 	}
 
-	public WrikeResponse uploadAttachment(String taskId) {
+	public WrikeResponse uploadAttachment(String taskId, List<File> images) {
 		UriComponents build = UriComponentsBuilder.fromUriString(
 				"https://www.wrike.com/api/v4//tasks/{taskId}/attachments")
 			.buildAndExpand(Map.of("taskId", taskId));
 
 		MultiValueMap<String, Object> requestBody = new LinkedMultiValueMap<>();
-		requestBody.add("files", new FileSystemResource(new File("C:/temp/error.png")));
+		images.forEach(image -> requestBody.add("files", new FileSystemResource(image)));
 
 		RequestEntity<MultiValueMap<String, Object>> entity =
 			RequestEntity.post(build.toUriString())
