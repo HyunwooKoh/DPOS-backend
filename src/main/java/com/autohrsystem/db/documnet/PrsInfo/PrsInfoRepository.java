@@ -1,6 +1,5 @@
-package com.autohrsystem.db.documnet;
+package com.autohrsystem.db.documnet.PrsInfo;
 
-import com.autohrsystem.db.documnet.PrsInfoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PrsInfoRepository extends JpaRepository<PrsInfoEntity, String> {

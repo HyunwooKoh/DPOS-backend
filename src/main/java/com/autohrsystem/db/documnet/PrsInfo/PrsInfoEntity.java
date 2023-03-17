@@ -1,4 +1,4 @@
-package com.autohrsystem.db.documnet;
+package com.autohrsystem.db.documnet.PrsInfo;
 
 
 import jakarta.persistence.*;
