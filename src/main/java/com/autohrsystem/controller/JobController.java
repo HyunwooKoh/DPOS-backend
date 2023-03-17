@@ -9,12 +9,13 @@ import com.autohrsystem.controller.Dto.JobDto;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,6 +61,26 @@ public class JobController {
         TaskEntity entity = taskRepository.findByUuid(dto.getUuid());
         res.setUuid(entity.getUuid());
         res.setStatus(entity.getStatus());
+        return res;
+    }
+
+    @GetMapping(value = "/error")
+    public JobDto.ErrorResponse getErrorInfo(@RequestBody JobDto.JobStatusJto dto) {
+        TaskEntity entity = taskRepository.findByUuid(dto.getUuid());
+        JobDto.ErrorResponse res = new JobDto.ErrorResponse();
+        res.setUuid("");
+        res.setErrorCode(0);
+
+        if (entity == null) {
+            res.setErrorMsg("Cannot found the uuid.");
+        } else if (entity.getStatus().equals("Failure")) {
+            res.setUuid(entity.getUuid());
+            res.setErrorMsg("The task has benn succeed.");
+        } else {
+            res.setUuid(entity.getUuid());
+            res.setErrorCode(entity.getErrorCode());
+            res.setErrorMsg(entity.getErrorMsg());
+        }
         return res;
     }
 }
