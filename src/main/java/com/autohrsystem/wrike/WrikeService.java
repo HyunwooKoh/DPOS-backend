@@ -1,5 +1,6 @@
 package com.autohrsystem.wrike;
 
+import com.autohrsystem.db.RepoManager;
 import com.autohrsystem.ocr.OcrParams;
 import com.autohrsystem.ocr.OcrServiceClient;
 import io.vertx.core.json.JsonObject;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -39,6 +41,9 @@ public class WrikeService {
 	@Autowired
 	private Environment env;
 
+	@Autowired
+	private RepoManager repoManager;
+
 	@Setter
 	@Getter
 	public static class WrikeResponse {
@@ -49,15 +54,27 @@ public class WrikeService {
 		public String getTaskId() {
 			return (String) data.get(0).get("id");
 		}
+		public String getLink() {
+			return (String) data.get(0).get("permalink");
+		}
 	}
 
 	@Getter
 	@Setter
+	@Builder
 	static class OcrResponse {
 		String errorCode;
 		String message;
 		String allTexts;
 
+		public String regularFormat() {
+			return String.format("""
+     				errorCode: %s
+     				message: %s
+     				allTexts: %s 
+					"""
+				, errorCode, message, allTexts);
+		}
 	}
 
 	@Autowired
@@ -66,9 +83,13 @@ public class WrikeService {
 	}
 
 	public URI issue(List<File> images, String reqType) {
-		images.stream()
-			.map(image -> getOcrResponse(image, reqType));
-		return null;
+		String content = images.stream()
+			.map(image -> getOcrResponse(image, reqType))
+			.map(OcrResponse::regularFormat)
+			.collect(Collectors.joining("\n"));
+		WrikeResponse taskResponse = createTask("Issue Help me", content);
+		uploadAttachment(taskResponse.getTaskId(), images);
+		return URI.create(taskResponse.getLink());
 	}
 
 	private OcrResponse getOcrResponse(File image, String reqType) {
@@ -76,7 +97,16 @@ public class WrikeService {
 			null,
 			env.getProperty("OCR_SERVER_URL"));
 		param.setReqOption(reqType);
-		return new OcrServiceClient(param).DoTask(response -> new OcrResponse());
+		return new OcrServiceClient(param).DoTask(this::convert);
+	}
+
+	private OcrResponse convert(JsonObject rawResponse) {
+		Map<String, String> result = repoManager.parseIssueData(rawResponse.toString());
+		return OcrResponse.builder()
+			.errorCode(result.get("ErrorCode"))
+			.message(result.get("ErrorMessage"))
+			.allTexts(result.get("content"))
+			.build();
 	}
 
 	public WrikeResponse createTask(String title, String contents) {

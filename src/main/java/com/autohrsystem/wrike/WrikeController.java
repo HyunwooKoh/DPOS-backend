@@ -26,13 +26,7 @@ public class WrikeController {
 		List<File> images = dto.getFiles().stream()
 			.map(this::transferTo)
 			.collect(Collectors.toList());
-
 		return ResponseEntity.ok(wrikeService.issue(images, dto.getReqType()).toASCIIString());
-//		String uuid = CommonApi.generateUuid();
-//		String inputFilePath = CommonApi.getTempDir(uuid) + "origin" + ext;
-//		String outputFilePath = CommonApi.getTempDir(uuid) + "result.json";
-//		//FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath);
-//		OcrParams param = new OcrParams(inputFilePath, outputFilePath, env.getProperty("OCR_SERVER_URL"))
 	}
 
 	@SneakyThrows
