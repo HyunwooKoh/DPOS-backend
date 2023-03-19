@@ -3,14 +3,13 @@ package com.autohrsystem.executer;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import com.autohrsystem.db.RepoManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.autohrsystem.common.CommonApi;
 import com.autohrsystem.common.ErrorCode;
-import com.autohrsystem.common.Error;
 import com.autohrsystem.executer.task.OcrTask;
-import com.autohrsystem.file.FileHandler;
 import com.autohrsystem.ocr.OcrParams;
 import com.autohrsystem.db.task.TaskEntity;
 import com.autohrsystem.db.task.TaskRepository;
@@ -25,19 +24,16 @@ import org.springframework.core.env.Environment;
 
 @Service
 public class OCRTaskExecutorService {
+    final ThreadPoolTaskExecutor m_taskExecutor;
     @Autowired
-    private Environment env;
+    TaskRepository m_taskRepository;
     @Autowired
-    @Qualifier("OCRTaskExecutor")
-    ThreadPoolTaskExecutor m_taskExecutor;
-
-    @Autowired
-    TaskRepository taskRepository;
-
+    RepoManager m_repoManager;
     Queue<OcrTask> m_tasks;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public OCRTaskExecutorService() {
+    public OCRTaskExecutorService(@Qualifier("OCRTaskExecutor")ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+        m_taskExecutor = threadPoolTaskExecutor;
         m_tasks = new LinkedList<>();
     }
 
@@ -50,42 +46,37 @@ public class OCRTaskExecutorService {
         if (!m_tasks.isEmpty()) {
             for (int i = 0 ; i < m_tasks.size(); i++) {
                 OcrTask task = m_tasks.peek();
-                TaskEntity entity = taskRepository.findByUuid(task.getUuid());
+                TaskEntity entity = m_taskRepository.findByUuid(task.getUuid());
                 entity.setStatus("Processing");
-                m_taskExecutor.execute(task); // TODO : Do we need use submit?
-                taskRepository.save(entity);
+                m_taskExecutor.execute(task);
+                m_taskRepository.save(entity);
             }
         }
     }
     @Async
     public void addTask(String uuid, String ext, String reqType) {
-        String inputFilePath = CommonApi.getTempDir(uuid) + "origin." + ext;
+        String inputFilePath = CommonApi.getTempDir(uuid) + "origin" + ext;
         String outputFilePath = CommonApi.getTempDir(uuid) + "result.json";
-        FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath);
-        OcrParams param = new OcrParams(inputFilePath, outputFilePath, env.getProperty("OCR_SERVER_URL"));
+        //FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath);
+        OcrParams param = new OcrParams(inputFilePath, outputFilePath, System.getenv("OCR_SERVER_URL"));
         TaskEntity entity = new TaskEntity(uuid, "waiting", inputFilePath, outputFilePath);
 
-        if (!reqType.isEmpty() && param.isValidReqType(reqType)) {
+        if (!reqType.isEmpty() && !param.isValidReqType(reqType)) {
             logger.error("Invalid reqType. uuid : " + uuid + ", reqType : " + reqType);
             entity.setStatus("Failure");
             entity.setErrorCode(ErrorCode.OCR_INVALID_REQ_TYPE);
             entity.setErrorMsg("Invalid request type");
         } else {
-            try {
-                fileHandler.getFile(); // TODO : Do we need to use fileHandler job as threadPoolExecutor?
-                OcrTask task = new OcrTask(param, fileHandler, uuid, reqType);
-                if (m_taskExecutor.getQueueSize() == 0) {
-                    entity.setStatus("Processing");
-                    m_taskExecutor.execute(task); // TODO : Do we need use submit?
-                } else {
-                    m_tasks.add(task);
-                }
-            } catch (Error e) {
-                entity.setStatus("Failure");
-                entity.setErrorCode(e.code());
-                entity.setErrorMsg(e.getMessage());
+            param.setReqOption(reqType);
+            OcrTask task = new OcrTask(param, uuid, reqType, m_repoManager);
+            if (m_taskExecutor.getQueueSize() == 0) {
+                entity.setStatus("Processing");
+                m_taskRepository.save(entity);
+                m_taskExecutor.execute(task);
+            } else {
+                m_tasks.add(task);
+                m_taskRepository.save(entity);
             }
-            taskRepository.save(entity);
         }
     }
 }

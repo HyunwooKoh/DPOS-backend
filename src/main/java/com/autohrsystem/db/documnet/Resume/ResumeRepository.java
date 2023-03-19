@@ -1,7 +1,6 @@
-package com.autohrsystem.db.documnet;
+package com.autohrsystem.db.documnet.Resume;
 
 
-import com.autohrsystem.db.documnet.ResumeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ResumeRepository extends JpaRepository<ResumeEntity, String> {

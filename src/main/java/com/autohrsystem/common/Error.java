@@ -1,6 +1,6 @@
 package com.autohrsystem.common;
 
-public class Error extends Throwable {
+public class Error extends RuntimeException {
     private final int m_errorCode;
     private final String m_msg;
     public Error(int errorCode, String msg) {

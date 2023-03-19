@@ -1,4 +1,4 @@
-package com.autohrsystem.db.documnet;
+package com.autohrsystem.db.documnet.Resume;
 
 import jakarta.persistence.*;
 import lombok.*;
