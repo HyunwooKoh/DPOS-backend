@@ -45,7 +45,16 @@ public class OcrTask implements Runnable {
             renderer.build();
             try {
                 renderer.render();
-                m_ocrParams.m_inputUri = CommonApi.getDirectoryOfFile(m_ocrParams.m_inputUri) + "/src/rendering." + m_ocrParams.targetPage(m_reqType) +".100.h.jpg";
+                File image = new File(CommonApi.getDirectoryOfFile(m_ocrParams.m_inputUri) + "/src/rendering." + m_ocrParams.targetPage(m_reqType) +".100.h.jpg");
+                if (!image.exists()) {
+                    entity.setStatus("Failure");
+                    entity.setErrorCode(ErrorCode.RENDERING_ERROR);
+                    entity.setErrorMsg("Cannot find rendered image file");
+                    repoManager.saveTaskEntity(entity);
+                    return;
+                } else {
+                    m_ocrParams.m_inputUri = CommonApi.getDirectoryOfFile(m_ocrParams.m_inputUri) + "/src/rendering." + m_ocrParams.targetPage(m_reqType) +".100.h.jpg";
+                }
             } catch (Exception e) {
                 entity.setStatus("Failure");
                 entity.setErrorCode(ErrorCode.RENDERING_ERROR);
