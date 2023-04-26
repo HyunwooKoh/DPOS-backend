@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.autohrsystem.common.CommonApi;
-import com.autohrsystem.common.ErrorCode;
+import com.autohrsystem.common.Error.ErrorCode;
 import com.autohrsystem.executer.task.OcrTask;
 import com.autohrsystem.ocr.OcrParams;
 import com.autohrsystem.db.task.TaskEntity;
@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.core.env.Environment;
 
 @Service
 public class OCRTaskExecutorService {
@@ -59,7 +58,7 @@ public class OCRTaskExecutorService {
         String inputFilePath = CommonApi.getTempDir(uuid) + "origin" + ext;
         String outputFilePath = CommonApi.getTempDir(uuid) + "result.json";
         // TODO : FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath); -> 비동기 처리 (threadPoolExecute)
-        OcrParams param = new OcrParams(inputFilePath, outputFilePath, System.getenv("OCR_SERVER_URL"));
+        OcrParams param = new OcrParams(inputFilePath, outputFilePath, System.getenv("OCR_SERVER_URL"), ext);
         TaskEntity entity = new TaskEntity(uuid, "waiting", inputFilePath, outputFilePath);
 
         if (!reqType.isEmpty() && !param.isValidReqType(reqType)) {

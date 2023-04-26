@@ -1,15 +1,13 @@
 package com.autohrsystem.file;
 
-import com.autohrsystem.common.Error;
-import com.autohrsystem.common.ErrorCode;
+import com.autohrsystem.common.Error.Error;
+import com.autohrsystem.common.Error.ErrorCode;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import io.vertx.core.json.JsonArray;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;

@@ -1,4 +1,4 @@
-package com.autohrsystem.common;
+package com.autohrsystem.common.Error;
 
 public class Error extends RuntimeException {
     private final int m_errorCode;

@@ -1,4 +1,4 @@
-package com.autohrsystem.common;
+package com.autohrsystem.common.Error;
 
 public class ErrorCode {
 
@@ -19,4 +19,11 @@ public class ErrorCode {
     public static int OCR_PULL_ERROR = -301;
     public static int OCR_PUSH_ERROR = -303;
     public static int OCR_INVALID_REQ_TYPE = -304;
+
+    // Rendering
+    public static int RENDERING_ERROR = -400;
+
+    // Entity
+    public static int CONVERT_ERROR = -500;
+
 }

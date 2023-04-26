@@ -1,26 +1,18 @@
 package com.autohrsystem.ocr;
 
-import com.autohrsystem.common.Error;
-import com.autohrsystem.common.ErrorCode;
+import com.autohrsystem.common.Error.Error;
+import com.autohrsystem.common.Error.ErrorCode;
 import io.vertx.core.json.JsonObject;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Map;
 import java.util.Objects;
 
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
