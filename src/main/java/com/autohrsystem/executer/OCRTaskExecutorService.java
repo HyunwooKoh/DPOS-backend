@@ -32,7 +32,7 @@ public class OCRTaskExecutorService {
     Queue<OcrTask> m_tasks;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public OCRTaskExecutorService(@Qualifier("OCRTaskExecutor")ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+    public OCRTaskExecutorService(@Qualifier("OCRTaskExecutor") ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         m_taskExecutor = threadPoolTaskExecutor;
         m_tasks = new LinkedList<>();
     }
@@ -44,7 +44,7 @@ public class OCRTaskExecutorService {
             m_taskExecutor.setQueueCapacity(m_taskExecutor.getQueueCapacity() * 2);
         }
         if (!m_tasks.isEmpty()) {
-            for (int i = 0 ; i < m_tasks.size(); i++) {
+            for (int i = 0; i < m_tasks.size(); i++) {
                 OcrTask task = m_tasks.peek();
                 TaskEntity entity = m_taskRepository.findByUuid(task.getUuid());
                 entity.setStatus("Processing");
@@ -53,11 +53,12 @@ public class OCRTaskExecutorService {
             }
         }
     }
+
     @Async
     public void addTask(String uuid, String ext, String reqType) {
         String inputFilePath = CommonApi.getTempDir(uuid) + "origin" + ext;
         String outputFilePath = CommonApi.getTempDir(uuid) + "result.json";
-        //FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath);
+        // TODO : FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath); -> 비동기 처리 (threadPoolExecute)
         OcrParams param = new OcrParams(inputFilePath, outputFilePath, System.getenv("OCR_SERVER_URL"));
         TaskEntity entity = new TaskEntity(uuid, "waiting", inputFilePath, outputFilePath);
 

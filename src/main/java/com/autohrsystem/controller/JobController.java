@@ -43,8 +43,8 @@ public class JobController {
                     String uuid = CommonApi.generateUuid();
                     String fileName = multipartFile.getOriginalFilename();
                     String ext = fileName.substring(fileName.lastIndexOf('.'));
+                    // TODO: if ext == "pdf" -> rendering
                     transferTo(multipartFile, uuid, ext);
-                    // TODO: commonAPI :: getExt()
                     uuids.add(uuid);
                     ocrTaskExecutorService.addTask(uuid, ext, reqType);
                 });
