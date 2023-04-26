@@ -14,9 +14,6 @@ public class PrsInfoEntity {
     private long uuid;
 
     @Column(nullable = false)
-    private boolean experienced;
-
-    @Column(nullable = false)
     private long StudentID;
 
     @Column(nullable = false, length = 20)
@@ -42,8 +39,5 @@ public class PrsInfoEntity {
 
     @Column(nullable = false, length = 20)
     private String afterRevise;
-
-    @Column(nullable = false, length = 300)
-    private String reviseReason;
 
 }
