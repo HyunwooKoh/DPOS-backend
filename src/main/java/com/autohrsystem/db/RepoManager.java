@@ -83,7 +83,7 @@ public class RepoManager {
     public void buildResumeEntity (String uuid, Map<String, String> data) throws Error {
         try {
             ResumeEntity entity = new ResumeEntity(uuid,
-                    Boolean.parseBoolean(data.get("experienced")),
+                    !data.get("experienced").equals("신입"),
                     Float.parseFloat(data.get("univScore")),
                     data.get("name"),
                     data.get("gender"),
