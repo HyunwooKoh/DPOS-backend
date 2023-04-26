@@ -10,19 +10,19 @@ import lombok.*;
 @Entity(name="Resume")
 public class ResumeEntity {
     @Id
-    private long uuid;
+    private String uuid;
 
     @Column(nullable = false)
     private boolean experienced;
 
     @Column(nullable = false)
-    private long univScore;
+    private float univScore;
 
     @Column(nullable = false, length = 20)
     private String name;
 
     @Column(nullable = false, length = 10)
-    private String sex;
+    private String gender;
 
     @Column(nullable = false, length = 20)
     private String volunteerArea;

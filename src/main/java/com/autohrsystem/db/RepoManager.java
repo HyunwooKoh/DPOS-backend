@@ -1,9 +1,10 @@
 package com.autohrsystem.db;
 
-import com.autohrsystem.common.CommonApi;
-import com.autohrsystem.db.documnet.Issue.IssueRepository;
-import com.autohrsystem.db.documnet.Issue.IssueEntity;
+import com.autohrsystem.common.Error.Error;
+import com.autohrsystem.common.Error.ErrorCode;
 import com.autohrsystem.db.documnet.PrsInfo.PrsInfoRepository;
+import com.autohrsystem.db.documnet.PrsInfo.PrsInfoEntity;
+import com.autohrsystem.db.documnet.Resume.ResumeEntity;
 import com.autohrsystem.db.documnet.Resume.ResumeRepository;
 import com.autohrsystem.db.task.TaskEntity;
 import com.autohrsystem.db.task.TaskRepository;
@@ -23,8 +24,6 @@ public class RepoManager {
     @Autowired
     private final TaskRepository taskRepository;
     @Autowired
-    private final IssueRepository issueRepository;
-    @Autowired
     private final PrsInfoRepository prsInfoRepository;
     @Autowired
     private final ResumeRepository resumeRepository;
@@ -37,56 +36,65 @@ public class RepoManager {
         return taskRepository.save(entity);
     }
 
-    public List<IssueEntity> getAllIssueEntity() {
-        return issueRepository.findAll();
+    public List<PrsInfoEntity> getAllPrsInfoEntity() {
+        return prsInfoRepository.findAll();
     }
+
+    public List<ResumeEntity> getAllResumeEntity() {
+        return resumeRepository.findAll();
+    }
+
     public Map<String, String> parse(String data, String reqType) {
-        if (reqType.equals("Type1")) {
-
-        } else if (reqType.equals("Type2")) {
-
-        } else if (reqType.equals("Type3")) {
-            return parseIssueData(data);
-        }
-        return new HashMap<String,String>();
-    }
-
-    public Map<String, String> parseResumeData(String data) {
-        Map<String, String> res = new HashMap<String, String>();
-        return res;
-    }
-
-    public Map<String, String> parsePrsInfoData(String data) {
-        Map<String, String> res = new HashMap<String, String>();
-        return res;
-    }
-
-    public Map<String, String> parseIssueData(String data) {
         Map<String, String> res = new HashMap<String, String>();
         JsonObject obj = new JsonObject(data);
-        if (obj.containsKey("document")) {
-            String uuid, content, errorCode = null, errorMsg = null;
-            uuid = CommonApi.generateUuid();
-            content = obj.getJsonObject("document").getJsonArray("pages").getJsonObject(0).getString("content");
-            JsonArray fields =  obj.getJsonObject("document").getJsonArray("pages").getJsonObject(0).getJsonObject("fields").getJsonArray("ErrorCode");
-            for(int i = 0 ; i < fields.size(); i++) {
-                String fieldContent = fields.getJsonObject(i).getString("content");
-                if (fieldContent.contains("BSD")) {
-                    int startIdx = fieldContent.indexOf("BSD");
-                    errorCode = fieldContent.substring(startIdx, startIdx + 9);
-                    if (startIdx + 10 < fieldContent.length()) {
-                        errorMsg = fieldContent.substring(startIdx + 10);
-                    }
-                    break;
-                }
+        JsonObject fields =  obj.getJsonObject("document").getJsonArray("pages").getJsonObject(0).getJsonObject("fields");
+        fields.forEach(item -> {
+            String val = "";
+            JsonArray array = new JsonArray(item.getValue().toString());
+            for (int i = 0 ; i < array.size(); i++) {
+                val += array.getJsonObject(i).getJsonObject("recognition").getString("content") + " ";
             }
-            res.put("uuid", uuid);
-            res.put("content", content);
-            res.put("ErrorCode", errorCode);
-            res.put("ErrorMessage", errorMsg);
-            IssueEntity entity = new IssueEntity(uuid, errorCode, errorMsg);
-            issueRepository.save(entity);
-        }
+            if (!val.equals("")) {
+                val = val.substring(0, val.length() - 1);
+            }
+            res.put(item.getKey(), val);
+        });
         return res;
+    }
+
+    public void buildPrsInfoEntity(String uuid, Map<String, String> data) throws Error {
+        try {
+            PrsInfoEntity entity = new PrsInfoEntity(uuid,
+                    Long.parseLong(data.get("studentID")),
+                    data.get("college"),
+                    data.get("department"),
+                    data.get("korName"),
+                    data.get("engName"),
+                    data.get("birth"),
+                    data.get("phone"),
+                    data.get("beforeRevise"),
+                    data.get("afterRevise"));
+            prsInfoRepository.save(entity);
+        } catch (NumberFormatException e) {
+            throw new Error(ErrorCode.CONVERT_ERROR, "Occur Error during converting value to insert to DB");
+        }
+    }
+
+    public void buildResumeEntity (String uuid, Map<String, String> data) throws Error {
+        try {
+            ResumeEntity entity = new ResumeEntity(uuid,
+                    Boolean.parseBoolean(data.get("experienced")),
+                    Float.parseFloat(data.get("univScore")),
+                    data.get("name"),
+                    data.get("gender"),
+                    data.get("volunteerArea"),
+                    data.get("birth"),
+                    data.get("address"),
+                    data.get("phone"),
+                    data.get("email"));
+            resumeRepository.save(entity);
+        } catch (NumberFormatException e) {
+            throw new Error(ErrorCode.CONVERT_ERROR, "Occur Error during converting value to insert to DB");
+        }
     }
 }

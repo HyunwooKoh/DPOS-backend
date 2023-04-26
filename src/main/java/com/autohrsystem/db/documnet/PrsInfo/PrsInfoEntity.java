@@ -11,10 +11,10 @@ import lombok.*;
 @Entity(name="PrsInfo")
 public class PrsInfoEntity {
     @Id
-    private long uuid;
+    private String uuid;
 
     @Column(nullable = false)
-    private long StudentID;
+    private long studentID;
 
     @Column(nullable = false, length = 20)
     private String college;
