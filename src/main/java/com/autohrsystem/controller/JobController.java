@@ -70,9 +70,9 @@ public class JobController {
 
         if (entity == null) {
             res.setErrorMsg("Cannot found the uuid.");
-        } else if (entity.getStatus().equals("Failure")) {
+        } else if (!entity.getStatus().equals("Failure")) {
             res.setUuid(entity.getUuid());
-            res.setErrorMsg("The task has benn succeed.");
+            res.setErrorMsg("The task has not benn failed.");
         } else {
             res.setUuid(entity.getUuid());
             res.setErrorCode(entity.getErrorCode());
