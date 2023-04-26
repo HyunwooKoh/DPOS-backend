@@ -1,16 +1,22 @@
 package com.autohrsystem.executer.task;
 
-import com.autohrsystem.common.ErrorCode;
+import com.autohrsystem.common.CommonApi;
+import com.autohrsystem.common.Error.ErrorCode;
+import com.autohrsystem.common.ReqType;
+
 import com.autohrsystem.db.RepoManager;
 import com.autohrsystem.db.task.*;
+import com.autohrsystem.executer.Render.PdfRenderer;
 
-import com.autohrsystem.common.Error;
+import com.autohrsystem.common.Error.Error;
 import com.autohrsystem.ocr.OcrServiceClient;
 import com.autohrsystem.ocr.OcrParams;
 import io.vertx.core.json.JsonObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,21 +39,27 @@ public class OcrTask implements Runnable {
 
     @Override
     public void run() {
-        OcrServiceClient ocrServiceClient = new OcrServiceClient(m_ocrParams);
         TaskEntity entity = repoManager.findTaskEntityByUuid(m_uuid);
-        try {
-            // TODO: build file handler via ocrParams
-            ocrServiceClient.DoTask(this::exportFile);
-            // TODO : m_fileHandler.uploadResult();
-            // TODO : parse result
-            if (m_reqType.equals("Type1")) {
-                // map<String, String> targetDatas
-                // ResumeEntity result = new ResumeEntity("")
-            } else if (m_reqType.equals("Type2")) {
-
-            } else if (m_reqType.equals("Type3")) {
-
+        if (this.m_ocrParams.m_ext.equalsIgnoreCase(".pdf")) {
+            PdfRenderer renderer = new PdfRenderer(m_ocrParams.m_inputUri);
+            renderer.build();
+            try {
+                renderer.render();
+                m_ocrParams.m_inputUri = CommonApi.getDirectoryOfFile(m_ocrParams.m_inputUri) + "/src/rendering." + m_ocrParams.targetPage(m_reqType) +".100.h.jpg";
+            } catch (Exception e) {
+                entity.setStatus("Failure");
+                entity.setErrorCode(ErrorCode.RENDERING_ERROR);
+                entity.setErrorMsg(e.getMessage());
+                repoManager.saveTaskEntity(entity);
+                return;
             }
+        }
+
+        OcrServiceClient ocrServiceClient = new OcrServiceClient(m_ocrParams);
+        try {
+            ocrServiceClient.DoTask(this::HandleResult);
+            // TODO: build file handler via ocrParams
+            // TODO : m_fileHandler.uploadResult();
             entity.setStatus("Success");
         } catch (Error e) {
             entity.setStatus("Failure");
@@ -57,7 +69,7 @@ public class OcrTask implements Runnable {
         repoManager.saveTaskEntity(entity);
     }
 
-    private Void exportFile(JsonObject response) {
+    private void exportFile(JsonObject response) {
         File resultJson = null;
         try {
             resultJson = new File(m_ocrParams.m_outputUri);
@@ -73,10 +85,19 @@ public class OcrTask implements Runnable {
             file.flush();
             file.close();
         } catch (IOException | Error e) {
+            assert resultJson != null;
             logger.error("Error Occur during save ocr result json. path : " + resultJson.getAbsolutePath());
             throw new RuntimeException(e);
         }
-        return null;
     }
 
+    private Void HandleResult(JsonObject response) {
+        exportFile(response);
+        Map<String, String> res = repoManager.parse(response.toString(), m_reqType);
+        switch (m_reqType) {
+            case ReqType.REQ_TYPE_PrsInfo -> repoManager.buildPrsInfoEntity(m_uuid, res);
+            case ReqType.REQ_TYPE_Resume -> repoManager.buildResumeEntity(m_uuid, res);
+        }
+        return null;
+    }
 }
