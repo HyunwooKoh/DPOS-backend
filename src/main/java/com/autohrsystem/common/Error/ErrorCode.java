@@ -6,6 +6,7 @@ public class ErrorCode {
     public static int FILE_NOT_FOUND = -100;
     public static int FILE_REMOVE_FAILED = -101;
     public static int INVALID_UUID = -102;
+    public static int UUID_DOES_NOT_EXIST = -103;
     public static int INVALID_REQ_TYPE = -104;
 
     // File Server Error

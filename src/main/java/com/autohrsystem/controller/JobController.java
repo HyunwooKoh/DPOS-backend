@@ -1,6 +1,10 @@
 package com.autohrsystem.controller;
 
 import com.autohrsystem.common.CommonApi;
+import com.autohrsystem.common.Error.ErrorCode;
+import com.autohrsystem.common.ReqType;
+import com.autohrsystem.common.Error.Error;
+import com.autohrsystem.db.RepoManager;
 import com.autohrsystem.db.task.TaskEntity;
 import com.autohrsystem.db.task.TaskRepository;
 import com.autohrsystem.executer.OCRTaskExecutorService;
@@ -29,6 +33,9 @@ public class JobController {
     @Autowired
     TaskRepository taskRepository;
 
+    @Autowired
+    RepoManager repoManager;
+
     @SneakyThrows
     private void transferTo(MultipartFile multipartFile, String uuid, String ext) {
         multipartFile.transferTo(new File(CommonApi.CreateAndGetTempDir(uuid) + "origin" + ext ));
@@ -49,6 +56,38 @@ public class JobController {
                 });
         JobDto.UuidsResponse res = new JobDto.UuidsResponse();
         res.setUuids(uuids);
+        return res;
+    }
+
+    @PostMapping(value = "/submit", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public JobDto.SubmitResponse submit(@ModelAttribute JobDto.SubmitRequestForm dto) {
+        String reqType = dto.getReqType();
+        JobDto.SubmitResponse res = new JobDto.SubmitResponse();
+        res.setStatus("Success");
+        if (!dto.getData().containsKey("uuid")) {
+            res.setStatus("Failure");
+            res.setUuids("None");
+            res.setErrMsg("Data must contain \"uuid\"");
+            res.setErrorCode(ErrorCode.UUID_DOES_NOT_EXIST);
+        } else {
+            try {
+                if (reqType.equals(ReqType.REQ_TYPE_Resume)) {
+                    repoManager.submitResumeEntity(dto.getData());
+                } else if (reqType.equals(ReqType.REQ_TYPE_PrsInfo)) {
+                    repoManager.submitPrsInfoEntity(dto.getData());
+                } else {
+                    res.setStatus("Failure");
+                    res.setUuids(dto.getData().getString("uuid"));
+                    res.setErrMsg("Invalid UUid");
+                    res.setErrorCode(ErrorCode.INVALID_REQ_TYPE);
+                }
+            } catch (Error e) {
+                res.setStatus("Failure");
+                res.setUuids(dto.getData().getString("uuid"));
+                res.setErrMsg(e.msg());
+                res.setErrorCode(e.code());
+            }
+        }
         return res;
     }
 
