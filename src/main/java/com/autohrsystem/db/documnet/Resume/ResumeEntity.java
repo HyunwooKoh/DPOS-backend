@@ -13,7 +13,7 @@ public class ResumeEntity {
     private String uuid;
 
     @Column(nullable = false)
-    private boolean experienced;
+    private String experienced;
 
     @Column(nullable = false)
     private float univScore;
