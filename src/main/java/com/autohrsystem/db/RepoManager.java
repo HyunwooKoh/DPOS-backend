@@ -99,12 +99,12 @@ public class RepoManager {
     }
 
     public void submitResumeEntity(JsonObject data) throws Error {
-        if (!validateResumeData(data)) {
-            throw new Error(ErrorCode.INVALID_RESUME_DATA, "Invalid resume data\n data : " + data.toString());
-        }
         ResumeEntity entity = resumeRepository.findByUuid(data.getString("uuid"));
         if (entity == null) {
             throw new Error(ErrorCode.INVALID_UUID, "Invalid uuid, UUid" + data.getString("uuid"));
+        }
+        if (!validateResumeData(data)) {
+            throw new Error(ErrorCode.INVALID_RESUME_DATA, "Invalid resume data\n data : " + data.toString());
         }
         entity.setExperienced(data.getString("experienced"));
         entity.setUnivScore(data.getFloat("univScore"));
@@ -119,12 +119,12 @@ public class RepoManager {
     }
 
     public void submitPrsInfoEntity(JsonObject data) {
-        if (!validatePrsInfoData(data)) {
-            throw new Error(ErrorCode.INVALID_PRSINFO_DATA, "Invalid prsInfo data\n data : " + data.toString());
-        }
         PrsInfoEntity entity = prsInfoRepository.findByUuid(data.getString("uuid"));
         if (entity == null) {
             throw new Error(ErrorCode.INVALID_UUID, "Invalid uuid, UUid" + data.getString("uuid"));
+        }
+        if (!validatePrsInfoData(data)) {
+            throw new Error(ErrorCode.INVALID_PRSINFO_DATA, "Invalid prsInfo data\n data : " + data.toString());
         }
         entity.setStudentID(data.getLong("studentID"));
         entity.setCollege(data.getString("college"));
@@ -139,9 +139,7 @@ public class RepoManager {
     }
 
     private boolean validateResumeData(JsonObject data) {
-        if(!data.containsKey("uuid")) {
-            return false;
-        } else if(!data.containsKey("experienced")) {
+        if(!data.containsKey("experienced")) {
             return false;
         } else if (!data.containsKey("univScore")) {
             return false;
@@ -164,9 +162,7 @@ public class RepoManager {
     }
 
     private boolean validatePrsInfoData(JsonObject data) {
-        if(!data.containsKey("uuid")) {
-            return false;
-        } else if(!data.containsKey("studentID")) {
+        if(!data.containsKey("studentID")) {
             return false;
         } else if (!data.containsKey("college")) {
             return false;
