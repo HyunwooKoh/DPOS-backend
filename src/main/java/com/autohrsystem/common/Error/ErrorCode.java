@@ -6,6 +6,7 @@ public class ErrorCode {
     public static int FILE_NOT_FOUND = -100;
     public static int FILE_REMOVE_FAILED = -101;
     public static int INVALID_UUID = -102;
+    public static int INVALID_REQ_TYPE = -104;
 
     // File Server Error
     public static int FSV_FILE_NOT_FOUND = -200;
@@ -19,7 +20,6 @@ public class ErrorCode {
     public static int OCR_RESULT_SAVE = -302;
     public static int OCR_PULL_ERROR = -301;
     public static int OCR_PUSH_ERROR = -303;
-    public static int OCR_INVALID_REQ_TYPE = -304;
 
     // Rendering
     public static int RENDERING_ERROR = -400;

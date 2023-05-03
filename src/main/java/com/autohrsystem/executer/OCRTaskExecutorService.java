@@ -64,7 +64,7 @@ public class OCRTaskExecutorService {
         if (!reqType.isEmpty() && !param.isValidReqType(reqType)) {
             logger.error("Invalid reqType. uuid : " + uuid + ", reqType : " + reqType);
             entity.setStatus("Failure");
-            entity.setErrorCode(ErrorCode.OCR_INVALID_REQ_TYPE);
+            entity.setErrorCode(ErrorCode.INVALID_REQ_TYPE);
             entity.setErrorMsg("Invalid request type");
         } else {
             param.setReqOption(reqType);
