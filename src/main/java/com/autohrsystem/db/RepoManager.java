@@ -137,8 +137,11 @@ public class RepoManager {
         entity.setAfterRevise(data.getString("afterRevise"));
         prsInfoRepository.save(entity);
     }
+
     private boolean validateResumeData(JsonObject data) {
-        if(!data.containsKey("experienced")) {
+        if(!data.containsKey("uuid")) {
+            return false;
+        } else if(!data.containsKey("experienced")) {
             return false;
         } else if (!data.containsKey("univScore")) {
             return false;
