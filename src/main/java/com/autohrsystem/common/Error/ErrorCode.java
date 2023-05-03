@@ -5,6 +5,7 @@ public class ErrorCode {
     // Common
     public static int FILE_NOT_FOUND = -100;
     public static int FILE_REMOVE_FAILED = -101;
+    public static int INVALID_UUID = -102;
 
     // File Server Error
     public static int FSV_FILE_NOT_FOUND = -200;
@@ -25,5 +26,6 @@ public class ErrorCode {
 
     // Entity
     public static int CONVERT_ERROR = -500;
+    public static int INVALID_RESUME_DATA = -501;
 
 }

@@ -38,4 +38,40 @@ public class ResumeEntity {
 
     @Column(nullable = false, length = 100)
     private String email;
+
+    public void setExperienced(String experienced) {
+        this.experienced = experienced;
+    }
+
+    public void setUnivScore(float univScore) {
+        this.univScore = univScore;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setVolunteerArea(String volunteerArea) {
+        this.volunteerArea = experienced;
+    }
+
+    public void setBirth(String birth) {
+        this.birth = birth;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 }

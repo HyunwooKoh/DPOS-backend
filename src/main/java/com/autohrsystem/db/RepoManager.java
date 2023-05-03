@@ -97,4 +97,47 @@ public class RepoManager {
             throw new Error(ErrorCode.CONVERT_ERROR, "Occur Error during converting value to insert to DB");
         }
     }
+
+    public void submitResumeEntity(JsonObject data) throws Error {
+        ResumeEntity entity = resumeRepository.findByUuid(data.getString("uuid"));
+        if (entity == null) {
+            throw new Error(ErrorCode.INVALID_UUID, "");
+        }
+        if (!validateResumeData(data)) {
+            throw new Error(ErrorCode.INVALID_RESUME_DATA, "Invalid resume data");
+        }
+        entity.setExperienced(data.getString("experienced"));
+        entity.setUnivScore(data.getFloat("univScore"));
+        entity.setName(data.getString("name"));
+        entity.setGender(data.getString("gender"));
+        entity.setVolunteerArea(data.getString("volunteerArea"));
+        entity.setBirth(data.getString("birth"));
+        entity.setAddress(data.getString("address"));
+        entity.setPhone(data.getString("phone"));
+        entity.setEmail(data.getString("email"));
+        resumeRepository.save(entity);
+    }
+
+    private boolean validateResumeData(JsonObject data) {
+        if(!data.containsKey("experienced")) {
+            return false;
+        } else if (!data.containsKey("univScore")) {
+            return false;
+        } else if (!data.containsKey("name")) {
+            return false;
+        } else if (!data.containsKey("gender")) {
+            return false;
+        } else if (!data.containsKey("volunteerArea")) {
+            return false;
+        } else if (!data.containsKey("birth")) {
+            return false;
+        } else if (!data.containsKey("address")) {
+            return false;
+        } else if (!data.containsKey("phone")) {
+            return false;
+        } else if (!data.containsKey("email")) {
+            return false;
+        }
+        return true;
+    }
 }
