@@ -99,12 +99,12 @@ public class RepoManager {
     }
 
     public void submitResumeEntity(JsonObject data) throws Error {
+        if (!validateResumeData(data)) {
+            throw new Error(ErrorCode.INVALID_RESUME_DATA, "Invalid resume data\n data : " + data.toString());
+        }
         ResumeEntity entity = resumeRepository.findByUuid(data.getString("uuid"));
         if (entity == null) {
-            throw new Error(ErrorCode.INVALID_UUID, "");
-        }
-        if (!validateResumeData(data)) {
-            throw new Error(ErrorCode.INVALID_RESUME_DATA, "Invalid resume data");
+            throw new Error(ErrorCode.INVALID_UUID, "Invalid uuid, UUid" + data.getString("uuid"));
         }
         entity.setExperienced(data.getString("experienced"));
         entity.setUnivScore(data.getFloat("univScore"));
