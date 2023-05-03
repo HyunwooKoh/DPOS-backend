@@ -27,5 +27,5 @@ public class ErrorCode {
     // Entity
     public static int CONVERT_ERROR = -500;
     public static int INVALID_RESUME_DATA = -501;
-
+    public static int INVALID_PRSINFO_DATA = -502;
 }

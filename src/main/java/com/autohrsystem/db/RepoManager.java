@@ -118,6 +118,25 @@ public class RepoManager {
         resumeRepository.save(entity);
     }
 
+    public void submitPrsInfoEntity(JsonObject data) {
+        if (!validatePrsInfoData(data)) {
+            throw new Error(ErrorCode.INVALID_PRSINFO_DATA, "Invalid prsInfo data\n data : " + data.toString());
+        }
+        PrsInfoEntity entity = prsInfoRepository.findByUuid(data.getString("uuid"));
+        if (entity == null) {
+            throw new Error(ErrorCode.INVALID_UUID, "Invalid uuid, UUid" + data.getString("uuid"));
+        }
+        entity.setStudentID(data.getLong("studentID"));
+        entity.setCollege(data.getString("college"));
+        entity.setDepartment(data.getString("department"));
+        entity.setKorName(data.getString("korName"));
+        entity.setEngName(data.getString("engName"));
+        entity.setBirth(data.getString("birth"));
+        entity.setPhone(data.getString("phone"));
+        entity.setBeforeRevise(data.getString("beforeRevise"));
+        entity.setAfterRevise(data.getString("afterRevise"));
+        prsInfoRepository.save(entity);
+    }
     private boolean validateResumeData(JsonObject data) {
         if(!data.containsKey("experienced")) {
             return false;
@@ -136,6 +155,31 @@ public class RepoManager {
         } else if (!data.containsKey("phone")) {
             return false;
         } else if (!data.containsKey("email")) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validatePrsInfoData(JsonObject data) {
+        if(!data.containsKey("uuid")) {
+            return false;
+        } else if(!data.containsKey("studentID")) {
+            return false;
+        } else if (!data.containsKey("college")) {
+            return false;
+        } else if (!data.containsKey("department")) {
+            return false;
+        } else if (!data.containsKey("korName")) {
+            return false;
+        } else if (!data.containsKey("engName")) {
+            return false;
+        } else if (!data.containsKey("birth")) {
+            return false;
+        } else if (!data.containsKey("phone")) {
+            return false;
+        } else if (!data.containsKey("beforeRevise")) {
+            return false;
+        } else if (!data.containsKey("afterRevise")) {
             return false;
         }
         return true;
