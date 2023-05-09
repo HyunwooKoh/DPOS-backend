@@ -22,8 +22,9 @@ public class ErrorCode {
     public static int OCR_PULL_ERROR = -301;
     public static int OCR_PUSH_ERROR = -303;
 
-    // Rendering
+    // Rendering & Diff drawing
     public static int RENDERING_ERROR = -400;
+    public static int Diff_Drawing_ERROR = -401;
 
     // Entity
     public static int CONVERT_ERROR = -500;
