@@ -92,12 +92,13 @@ public class JobController {
         return res;
     }
 
+    // TODO: Refact to doesn't use reqType -> use query with uuid to get reqType
     @PostMapping(value = "/result")
     public JobDto.ResultResponse result(@RequestBody JobDto.ResultRequestJTO dto) {
         JobDto.ResultResponse res = new JobDto.ResultResponse();
-        try {
-            // TODO: fileManger -> load result image file as MultiPartFile.
-            res.setImage();
+        switch (dto.getReqType()) {
+            case "Resume" ->res.setResData(repoManager.getResumeResultByUuid(dto.getUuid()));
+            case "PrsInfo" -> res.setResData(repoManager.getPrsResultByUuid(dto.getUuid()));
         }
         return res;
     }

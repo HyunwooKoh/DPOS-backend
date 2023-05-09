@@ -8,6 +8,7 @@ import com.autohrsystem.db.documnet.Resume.ResumeEntity;
 import com.autohrsystem.db.documnet.Resume.ResumeRepository;
 import com.autohrsystem.db.task.TaskEntity;
 import com.autohrsystem.db.task.TaskRepository;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,16 @@ public class RepoManager {
 
     public List<ResumeEntity> getAllResumeEntity() {
         return resumeRepository.findAll();
+    }
+
+    public JsonObject getPrsResultByUuid(String uuid) {
+        PrsInfoEntity entity = prsInfoRepository.findByUuid(uuid);
+        return buildPrsInfoEntityJson(entity);
+    }
+
+    public JsonObject getResumeResultByUuid(String uuid) {
+        ResumeEntity entity = resumeRepository.findByUuid(uuid);
+        return buildResumeInfoEntityJson(entity);
     }
 
     public Map<String, String> parse(String data, String reqType) {
@@ -182,5 +193,33 @@ public class RepoManager {
             return false;
         }
         return true;
+    }
+
+
+    private JsonObject buildResumeInfoEntityJson(ResumeEntity entity) {
+        JsonObject json = new JsonObject();
+        json.put("Experienced", entity.getExperienced());
+        json.put("UnivScore", entity.getUnivScore());
+        json.put("Name", entity.getName());
+        json.put("Gender", entity.getGender());
+        json.put("VolunteerArea", entity.getVolunteerArea());
+        json.put("Birth", entity.getBirth());
+        json.put("Address", entity.getAddress());
+        json.put("Phone", entity.getPhone());
+        json.put("Email", entity.getEmail());
+        return json;
+    }
+
+    private JsonObject buildPrsInfoEntityJson(PrsInfoEntity entity) {
+        JsonObject json = new JsonObject();
+        json.put("StudentID", entity.getStudentID());
+        json.put("Department", entity.getDepartment());
+        json.put("KorName", entity.getKorName());
+        json.put("EngName", entity.getEngName());
+        json.put("Birth", entity.getBirth());
+        json.put("Phone", entity.getPhone());
+        json.put("BeforeRevise", entity.getBeforeRevise());
+        json.put("AfterRevise", entity.getAfterRevise());
+        return json;
     }
 }
