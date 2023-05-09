@@ -7,6 +7,7 @@ import com.autohrsystem.common.ReqType;
 import com.autohrsystem.db.RepoManager;
 import com.autohrsystem.db.task.*;
 import com.autohrsystem.executer.Render.PdfRenderer;
+import com.autohrsystem.executer.diffImg.ImgDrawer;
 
 import com.autohrsystem.common.Error.Error;
 import com.autohrsystem.ocr.OcrServiceClient;
@@ -101,8 +102,15 @@ public class OcrTask implements Runnable {
         }
     }
 
-    private Void HandleResult(JsonObject response) {
+    private void drawDiffImage() throws Error {
+        ImgDrawer drawer = new ImgDrawer(m_ocrParams.m_inputUri, CommonApi.getDirectoryOfFile(m_ocrParams.m_outputUri));
+        drawer.build();
+        drawer.drawCompareImg();
+    }
+
+    private Void HandleResult(JsonObject response) throws Error {
         exportFile(response);
+        drawDiffImage();
         Map<String, String> res = repoManager.parse(response.toString(), m_reqType);
         switch (m_reqType) {
             case ReqType.REQ_TYPE_PrsInfo -> repoManager.buildPrsInfoEntity(m_uuid, res);
