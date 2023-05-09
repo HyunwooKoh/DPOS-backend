@@ -80,25 +80,22 @@ public class OcrTask implements Runnable {
         repoManager.saveTaskEntity(entity);
     }
 
-    private void exportFile(JsonObject response) {
+    private void exportFile(JsonObject response) throws Error {
         File resultJson = null;
+        resultJson = new File(m_ocrParams.m_outputUri);
+        if (resultJson.exists()) {
+            throw new Error(ErrorCode.OCR_RESULT_EXIST, "Result json already exist. path : " + resultJson.getAbsolutePath());
+        }
         try {
-            resultJson = new File(m_ocrParams.m_outputUri);
-            if (resultJson.exists()) {
-                throw new Error(ErrorCode.OCR_RESULT_EXIST, "Result json already exist. path : " + resultJson.getAbsolutePath());
+            if (resultJson.createNewFile()) {
+                FileWriter file = new FileWriter(resultJson.getAbsolutePath());
+                file.write(response.toString());
+                file.flush();
+                file.close();
             }
-
-            if (!resultJson.createNewFile()) {
-                throw new Error(ErrorCode.OCR_RESULT_SAVE, "Error occur during create file. path : " + resultJson.getAbsolutePath());
-            }
-            FileWriter file = new FileWriter(resultJson.getAbsolutePath());
-            file.write(response.toString());
-            file.flush();
-            file.close();
-        } catch (IOException | Error e) {
-            assert resultJson != null;
+        } catch (IOException ioE) {
             logger.error("Error Occur during save ocr result json. path : " + resultJson.getAbsolutePath());
-            throw new RuntimeException(e);
+            throw new Error(ErrorCode.OCR_RESULT_SAVE,ioE.getMessage());
         }
     }
 
