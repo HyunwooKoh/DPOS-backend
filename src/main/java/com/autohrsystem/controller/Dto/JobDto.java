@@ -32,6 +32,16 @@ public class JobDto {
         private String uuid;
     }
 
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ResultRequestJTO {
+        private String uuid;
+        private String reqType;
+    }
+
     @Setter
     @Getter
     public static class UuidsResponse {
@@ -45,6 +55,13 @@ public class JobDto {
         private String status;
         private String errMsg;
         private int errorCode;
+    }
+
+    @Setter
+    @Getter
+    public static class ResultResponse {
+        MultipartFile image;
+        JsonObject resData;
     }
 
     @Setter

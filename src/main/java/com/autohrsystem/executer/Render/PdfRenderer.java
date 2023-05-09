@@ -3,6 +3,7 @@ import com.autohrsystem.common.CommonApi;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.cert.TrustAnchor;
 
 public class PdfRenderer {
     public String m_inputFile;
@@ -30,5 +31,9 @@ public class PdfRenderer {
         } catch (IOException e) {
             throw new IOException(e);
         }
+    }
+
+    public boolean createCompareImg() {
+        return true;
     }
 }

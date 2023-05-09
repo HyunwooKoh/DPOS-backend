@@ -67,6 +67,7 @@ public class OcrTask implements Runnable {
         OcrServiceClient ocrServiceClient = new OcrServiceClient(m_ocrParams);
         try {
             ocrServiceClient.DoTask(this::HandleResult);
+
             // TODO: build file handler via ocrParams
             // TODO : m_fileHandler.uploadResult();
             entity.setStatus("Success");

@@ -59,6 +59,7 @@ public class JobController {
         return res;
     }
 
+    // TODO: Refact to doesn't use reqType -> use query with uuid to get reqType
     @PostMapping(value = "/submit", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public JobDto.SubmitResponse submit(@ModelAttribute JobDto.SubmitRequestForm dto) {
         String reqType = dto.getReqType();
@@ -87,6 +88,16 @@ public class JobController {
                 res.setErrMsg(e.msg());
                 res.setErrorCode(e.code());
             }
+        }
+        return res;
+    }
+
+    @PostMapping(value = "/result")
+    public JobDto.ResultResponse result(@RequestBody JobDto.ResultRequestJTO dto) {
+        JobDto.ResultResponse res = new JobDto.ResultResponse();
+        try {
+            // TODO: fileManger -> load result image file as MultiPartFile.
+            res.setImage();
         }
         return res;
     }
