@@ -6,6 +6,7 @@ import com.autohrsystem.common.Error.ErrorCode;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
+import java.io.PrintStream;
 
 public class ImgDrawer {
     private final String m_workingDir;
@@ -18,18 +19,17 @@ public class ImgDrawer {
     }
 
     public void build() {
-        m_command += CommonApi.normalizePath(System.getenv("HOME")) + "/module/diffImg/draw_diff.py ";
-        m_command += m_workingDir + "/" + m_inputImg;
-        m_command += " " + m_workingDir + "/res.json";
+        m_command += "python " + CommonApi.normalizePath(System.getenv("HOME")) + "/module/diffImg/draw_diff.py ";
+        m_command +=  m_inputImg;
+        m_command += " " + m_workingDir + "/result.json";
         m_command += " " + m_workingDir + "/diff.png";
-
     }
 
     @SneakyThrows
     public void drawCompareImg() throws Error {
         try {
-            Process renderer =  runTime.exec(m_command);
-            renderer.waitFor();
+            Process drawer =  runTime.exec(m_command);
+            drawer.waitFor();
         } catch (IOException e) {
             throw new Error(ErrorCode.Diff_Drawing_ERROR, "Error occur during drawing diff image");
         }
