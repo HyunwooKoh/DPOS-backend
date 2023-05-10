@@ -75,7 +75,7 @@ public class OcrTask implements Runnable {
         } catch (Error e) {
             entity.setStatus("Failure");
             entity.setErrorCode(e.code());
-            entity.setErrorMsg(e.getMessage());
+            entity.setErrorMsg(e.msg());
         }
         repoManager.saveTaskEntity(entity);
     }
