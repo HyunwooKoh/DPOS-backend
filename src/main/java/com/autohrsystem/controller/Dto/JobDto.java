@@ -60,7 +60,7 @@ public class JobDto {
     @Setter
     @Getter
     public static class ResultResponse {
-        MultipartFile image;
+        String imageUrl;
         JsonObject resData;
     }
 
