@@ -59,6 +59,7 @@ public class JobController {
         return res;
     }
 
+    // TODO: Refact to doesn't use reqType -> use query with uuid to get reqType
     @PostMapping(value = "/submit", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public JobDto.SubmitResponse submit(@ModelAttribute JobDto.SubmitRequestForm dto) {
         String reqType = dto.getReqType();
@@ -88,6 +89,18 @@ public class JobController {
                 res.setErrorCode(e.code());
             }
         }
+        return res;
+    }
+
+    // TODO: Refact to doesn't use reqType -> use query with uuid to get reqType
+    @GetMapping(value = "/result")
+    public JobDto.ResultResponse result(@RequestBody JobDto.ResultRequestJTO dto) {
+        JobDto.ResultResponse res = new JobDto.ResultResponse();
+        switch (dto.getReqType()) {
+            case "Resume" ->res.setResData(repoManager.getResumeResultByUuid(dto.getUuid()));
+            case "PrsInfo" -> res.setResData(repoManager.getPrsResultByUuid(dto.getUuid()));
+        }
+        res.setImageUrl("/file/" + dto.getUuid() + "/diff.png");
         return res;
     }
 

@@ -7,6 +7,7 @@ import com.autohrsystem.common.ReqType;
 import com.autohrsystem.db.RepoManager;
 import com.autohrsystem.db.task.*;
 import com.autohrsystem.executer.Render.PdfRenderer;
+import com.autohrsystem.executer.diffImg.ImgDrawer;
 
 import com.autohrsystem.common.Error.Error;
 import com.autohrsystem.ocr.OcrServiceClient;
@@ -67,6 +68,7 @@ public class OcrTask implements Runnable {
         OcrServiceClient ocrServiceClient = new OcrServiceClient(m_ocrParams);
         try {
             ocrServiceClient.DoTask(this::HandleResult);
+
             // TODO: build file handler via ocrParams
             // TODO : m_fileHandler.uploadResult();
             entity.setStatus("Success");
@@ -78,30 +80,34 @@ public class OcrTask implements Runnable {
         repoManager.saveTaskEntity(entity);
     }
 
-    private void exportFile(JsonObject response) {
+    private void exportFile(JsonObject response) throws Error {
         File resultJson = null;
+        resultJson = new File(m_ocrParams.m_outputUri);
+        if (resultJson.exists()) {
+            throw new Error(ErrorCode.OCR_RESULT_EXIST, "Result json already exist. path : " + resultJson.getAbsolutePath());
+        }
         try {
-            resultJson = new File(m_ocrParams.m_outputUri);
-            if (resultJson.exists()) {
-                throw new Error(ErrorCode.OCR_RESULT_EXIST, "Result json already exist. path : " + resultJson.getAbsolutePath());
+            if (resultJson.createNewFile()) {
+                FileWriter file = new FileWriter(resultJson.getAbsolutePath());
+                file.write(response.toString());
+                file.flush();
+                file.close();
             }
-
-            if (!resultJson.createNewFile()) {
-                throw new Error(ErrorCode.OCR_RESULT_SAVE, "Error occur during create file. path : " + resultJson.getAbsolutePath());
-            }
-            FileWriter file = new FileWriter(resultJson.getAbsolutePath());
-            file.write(response.toString());
-            file.flush();
-            file.close();
-        } catch (IOException | Error e) {
-            assert resultJson != null;
+        } catch (IOException ioE) {
             logger.error("Error Occur during save ocr result json. path : " + resultJson.getAbsolutePath());
-            throw new RuntimeException(e);
+            throw new Error(ErrorCode.OCR_RESULT_SAVE,ioE.getMessage());
         }
     }
 
-    private Void HandleResult(JsonObject response) {
+    private void drawDiffImage() throws Error {
+        ImgDrawer drawer = new ImgDrawer(m_ocrParams.m_inputUri, CommonApi.getDirectoryOfFile(m_ocrParams.m_outputUri));
+        drawer.build();
+        drawer.drawCompareImg();
+    }
+
+    private Void HandleResult(JsonObject response) throws Error {
         exportFile(response);
+        drawDiffImage();
         Map<String, String> res = repoManager.parse(response.toString(), m_reqType);
         switch (m_reqType) {
             case ReqType.REQ_TYPE_PrsInfo -> repoManager.buildPrsInfoEntity(m_uuid, res);

@@ -1,8 +1,12 @@
 package com.autohrsystem.executer.Render;
 import com.autohrsystem.common.CommonApi;
+import com.autohrsystem.common.Error.Error;
+import com.autohrsystem.common.Error.ErrorCode;
+import lombok.SneakyThrows;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.cert.TrustAnchor;
 
 public class PdfRenderer {
     public String m_inputFile;
@@ -23,12 +27,17 @@ public class PdfRenderer {
                 + new File(m_inputFile).getParent() + "/src";
     }
 
-    public void render() throws Exception {
+    @SneakyThrows
+    public void render() throws Error {
         try {
             Process renderer =  runTime.exec(m_command);
             renderer.waitFor();
         } catch (IOException e) {
-            throw new IOException(e);
+            throw new Error(ErrorCode.RENDERING_ERROR, "Error occur during rendering pdf");
         }
+    }
+
+    public boolean createCompareImg() {
+        return true;
     }
 }
