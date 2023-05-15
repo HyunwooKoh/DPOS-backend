@@ -56,10 +56,10 @@ public class OcrTask implements Runnable {
                 } else {
                     m_ocrParams.m_inputUri = CommonApi.getDirectoryOfFile(m_ocrParams.m_inputUri) + "/src/rendering." + m_ocrParams.targetPage(m_reqType) +".100.h.jpg";
                 }
-            } catch (Exception e) {
+            } catch (Error e) {
                 entity.setStatus("Failure");
                 entity.setErrorCode(ErrorCode.RENDERING_ERROR);
-                entity.setErrorMsg(e.getMessage());
+                entity.setErrorMsg(e.msg());
                 repoManager.saveTaskEntity(entity);
                 return;
             }
