@@ -9,11 +9,11 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>AutoHRSystem</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <artifactId>DocDocHae</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
-    <name>AutoHRSystem</name>
-    <description>AutoHRSystem</description>
+    <name>DocDocHae</name>
+    <description>DocDocHae</description>
     <properties>
         <java.version>17</java.version>
     </properties>
@@ -52,10 +52,6 @@
             <artifactId>vertx-core</artifactId>
             <version>4.2.5</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-webflux</artifactId>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
