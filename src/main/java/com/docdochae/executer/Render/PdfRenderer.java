@@ -18,9 +18,9 @@ public class PdfRenderer {
     public void build() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            m_command += CommonApi.normalizePath(System.getenv("HOME")) + "/module/pdfio.exe";
+            m_command += CommonApi.normalizePath(System.getenv("HOME")) + "/module/render/pdfio.exe";
         } else if (os.contains("linux")) {
-            m_command += System.getenv("HOME") + "/module/pdfio";
+            m_command += System.getenv("HOME") + "/module/render/pdfio";
         }
         m_command += " --task extract --target rendering --option zoom=100,format=jpg,jpeg-quality=h --range all --input " + m_inputFile + " --output "
                 + new File(m_inputFile).getParent() + "/src";
