@@ -100,7 +100,7 @@ public class JobController {
             case "Resume" ->res.setResData(repoManager.getResumeResultByUuid(dto.getUuid()));
             case "PrsInfo" -> res.setResData(repoManager.getPrsResultByUuid(dto.getUuid()));
         }
-        res.setImageUrl("/file/" + dto.getUuid() + "/diff.png");
+        res.setImageUrl("/file/resultImage/" + dto.getUuid());
         return res;
     }
 
