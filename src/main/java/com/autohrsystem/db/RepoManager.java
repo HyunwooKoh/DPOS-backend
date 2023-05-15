@@ -1,5 +1,9 @@
 package com.autohrsystem.db;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.autohrsystem.common.Error.Error;
 import com.autohrsystem.common.Error.ErrorCode;
 import com.autohrsystem.db.documnet.PrsInfo.PrsInfoRepository;
@@ -8,16 +12,12 @@ import com.autohrsystem.db.documnet.Resume.ResumeEntity;
 import com.autohrsystem.db.documnet.Resume.ResumeRepository;
 import com.autohrsystem.db.task.TaskEntity;
 import com.autohrsystem.db.task.TaskRepository;
-import io.vertx.core.json.Json;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +31,11 @@ public class RepoManager {
 
     public TaskEntity findTaskEntityByUuid(String uuid) {
         return taskRepository.findByUuid(uuid);
+    }
+
+    public boolean taskSuccessed(String uuid) {
+        TaskEntity entity = findTaskEntityByUuid(uuid);
+        return entity != null && entity.getStatus().equals("Success");
     }
 
     public TaskEntity saveTaskEntity(TaskEntity entity) {
