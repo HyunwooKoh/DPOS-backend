@@ -12,8 +12,8 @@
     <artifactId>DocDocHae</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>AutoHRSystem</name>
-    <description>AutoHRSystem</description>
+    <name>DocDocHae</name>
+    <description>DocDocHae</description>
     <properties>
         <java.version>17</java.version>
     </properties>
