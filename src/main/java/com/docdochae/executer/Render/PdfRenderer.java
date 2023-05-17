@@ -27,6 +27,8 @@ public class PdfRenderer {
             m_command += CommonApi.normalizePath(System.getenv("HOME")) + "/module/render/pdfio.exe";
         } else if (os.contains("linux")) {
             m_command += System.getenv("HOME") + "/module/render/pdfio";
+        } else if (os.contains("mac")) {
+            m_command += System.getenv("HOME") + "/module/render/pdfio-mac";
         }
         m_command += " --task extract --target rendering --option zoom=100,format=jpg,jpeg-quality=h --range all --input " + m_inputFile + " --output "
                 + new File(m_inputFile).getParent() + "/src";
