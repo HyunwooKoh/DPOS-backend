@@ -24,7 +24,7 @@ public class ImgDrawer {
     }
 
     public void build() {
-        m_command += "python3 " + CommonApi.normalizePath(System.getenv("HOME")) + "/module/diffImg/draw_diff.py ";
+        m_command += "python " + CommonApi.normalizePath(System.getenv("HOME")) + "/module/diffImg/draw_diff.py ";
         m_command +=  m_inputImg;
         m_command += " " + m_workingDir + "/result.json";
         m_command += " " + m_workingDir + "/diff.png";
