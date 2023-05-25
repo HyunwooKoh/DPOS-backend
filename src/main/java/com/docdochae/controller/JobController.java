@@ -13,6 +13,8 @@ import com.docdochae.controller.Dto.JobDto;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,32 +61,27 @@ public class JobController {
         return res;
     }
 
-    // TODO: Refact to doesn't use reqType -> use query with uuid to get reqType
-    @PostMapping(value = "/submit", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public JobDto.SubmitResponse submit(@ModelAttribute JobDto.SubmitRequestForm dto) {
-        String reqType = dto.getReqType();
+    @PostMapping(value = "/submit")
+    public JobDto.SubmitResponse submit(@RequestBody JobDto.SubmitRequestJtO dto) {
         JobDto.SubmitResponse res = new JobDto.SubmitResponse();
         res.setStatus("Success");
-        if (!dto.getData().containsKey("uuid")) {
+        String reqType = repoManager.getReqTypeByUuid(dto.getUuid());
+
+        if (Objects.equals(reqType, "Invalid")) {
             res.setStatus("Failure");
             res.setUuids("None");
-            res.setErrMsg("Data must contain \"uuid\"");
+            res.setErrMsg("Invalid \"uuid\"");
             res.setErrorCode(ErrorCode.UUID_DOES_NOT_EXIST);
         } else {
             try {
                 if (reqType.equals(ReqType.REQ_TYPE_Resume)) {
-                    repoManager.submitResumeEntity(dto.getData());
+                    repoManager.submitResumeEntity(dto.getUuid(), dto.getData());
                 } else if (reqType.equals(ReqType.REQ_TYPE_PrsInfo)) {
-                    repoManager.submitPrsInfoEntity(dto.getData());
-                } else {
-                    res.setStatus("Failure");
-                    res.setUuids(dto.getData().getString("uuid"));
-                    res.setErrMsg("Invalid UUid");
-                    res.setErrorCode(ErrorCode.INVALID_REQ_TYPE);
+                    repoManager.submitPrsInfoEntity(dto.getUuid(), dto.getData());
                 }
             } catch (Error e) {
                 res.setStatus("Failure");
-                res.setUuids(dto.getData().getString("uuid"));
+                res.setUuids(dto.getUuid());
                 res.setErrMsg(e.msg());
                 res.setErrorCode(e.code());
             }
@@ -92,41 +89,38 @@ public class JobController {
         return res;
     }
 
-    // TODO: Refact to doesn't use reqType -> use query with uuid to get reqType
-    @GetMapping(value = "/result")
-    public JobDto.ResultResponse result(@RequestBody JobDto.ResultRequestJTO dto) {
+    @GetMapping("/result/{uuid}")
+    public JobDto.ResultResponse result(@PathVariable String uuid) {
         JobDto.ResultResponse res = new JobDto.ResultResponse();
-        switch (dto.getReqType()) {
-            case "Resume" ->res.setResData(repoManager.getResumeResultByUuid(dto.getUuid()));
-            case "PrsInfo" -> res.setResData(repoManager.getPrsResultByUuid(dto.getUuid()));
+        switch (repoManager.getReqTypeByUuid(uuid)) {
+            case "Resume" ->res.setResData(repoManager.getResumeResultByUuid(uuid));
+            case "PrsInfo" -> res.setResData(repoManager.getPrsResultByUuid(uuid));
         }
-        res.setImageUrl("/file/resultImage/" + dto.getUuid());
+        res.setImageUrl("/file/resultImage/" + uuid);
         return res;
     }
 
-    @GetMapping(value = "/status")
-    public JobDto.StatusResponse checkTaskStatus(@RequestBody JobDto.JobStatusJto dto) {
+    @GetMapping("/status/{uuid}")
+    public JobDto.StatusResponse checkTaskStatus(@PathVariable String uuid) {
         JobDto.StatusResponse res = new JobDto.StatusResponse();
-        TaskEntity entity = taskRepository.findByUuid(dto.getUuid());
+        TaskEntity entity = taskRepository.findByUuid(uuid);
         res.setUuid(entity.getUuid());
         res.setStatus(entity.getStatus());
         return res;
     }
 
-    @GetMapping(value = "/error")
-    public JobDto.ErrorResponse getErrorInfo(@RequestBody JobDto.JobStatusJto dto) {
-        TaskEntity entity = taskRepository.findByUuid(dto.getUuid());
+    @GetMapping(value = "/error/{uuid}")
+    public JobDto.ErrorResponse getErrorInfo(@PathVariable String uuid) {
+        TaskEntity entity = taskRepository.findByUuid(uuid);
         JobDto.ErrorResponse res = new JobDto.ErrorResponse();
-        res.setUuid("");
+        res.setUuid(uuid);
         res.setErrorCode(0);
 
         if (entity == null) {
             res.setErrorMsg("Cannot found the uuid.");
         } else if (!entity.getStatus().equals("Failure")) {
-            res.setUuid(entity.getUuid());
             res.setErrorMsg("The task has not benn failed.");
         } else {
-            res.setUuid(entity.getUuid());
             res.setErrorCode(entity.getErrorCode());
             res.setErrorMsg(entity.getErrorMsg());
         }

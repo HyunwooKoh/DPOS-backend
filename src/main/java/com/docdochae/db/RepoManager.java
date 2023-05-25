@@ -38,6 +38,14 @@ public class RepoManager {
         return entity != null && entity.getStatus().equals("Success");
     }
 
+    public String getReqTypeByUuid(String uuid) {
+        TaskEntity entity = findTaskEntityByUuid(uuid);
+        if (entity == null) {
+            return "Invalid";
+        }
+        return entity.getReqType();
+    }
+
     public TaskEntity saveTaskEntity(TaskEntity entity) {
         return taskRepository.save(entity);
     }
@@ -114,92 +122,39 @@ public class RepoManager {
         }
     }
 
-    public void submitResumeEntity(JsonObject data) throws Error {
-        ResumeEntity entity = resumeRepository.findByUuid(data.getString("uuid"));
+    public void submitResumeEntity(String uuid, Map<String, String> data) throws Error {
+        ResumeEntity entity = resumeRepository.findByUuid(uuid);
         if (entity == null) {
-            throw new Error(ErrorCode.INVALID_UUID, "Invalid uuid, UUid" + data.getString("uuid"));
+            throw new Error(ErrorCode.INVALID_UUID, "Invalid uuid, UUid" + uuid);
         }
-        if (!validateResumeData(data)) {
-            throw new Error(ErrorCode.INVALID_RESUME_DATA, "Invalid resume data\n data : " + data.toString());
-        }
-        entity.setExperienced(data.getString("experienced"));
-        entity.setUnivScore(data.getFloat("univScore"));
-        entity.setName(data.getString("name"));
-        entity.setGender(data.getString("gender"));
-        entity.setVolunteerArea(data.getString("volunteerArea"));
-        entity.setBirth(data.getString("birth"));
-        entity.setAddress(data.getString("address"));
-        entity.setPhone(data.getString("phone"));
-        entity.setEmail(data.getString("email"));
+        entity.setExperienced(data.getOrDefault("experienced", entity.getExperienced()));
+        entity.setUnivScore(Float.parseFloat(data.getOrDefault("univScore", String.valueOf(entity.getUnivScore()))));
+        entity.setName(data.getOrDefault("name", entity.getName()));
+        entity.setGender(data.getOrDefault("gender", entity.getGender()));
+        entity.setVolunteerArea(data.getOrDefault("volunteerArea", entity.getVolunteerArea()));
+        entity.setBirth(data.getOrDefault("birth", entity.getBirth()));
+        entity.setAddress(data.getOrDefault("address", entity.getAddress()));
+        entity.setPhone(data.getOrDefault("phone", entity.getPhone()));
+        entity.setEmail(data.getOrDefault("email", entity.getEmail()));
         resumeRepository.save(entity);
     }
 
-    public void submitPrsInfoEntity(JsonObject data) {
-        PrsInfoEntity entity = prsInfoRepository.findByUuid(data.getString("uuid"));
+    public void submitPrsInfoEntity(String uuid, Map<String, String> data) {
+        PrsInfoEntity entity = prsInfoRepository.findByUuid(uuid);
         if (entity == null) {
-            throw new Error(ErrorCode.INVALID_UUID, "Invalid uuid, UUid" + data.getString("uuid"));
+            throw new Error(ErrorCode.INVALID_UUID, "Invalid uuid, UUid" + uuid);
         }
-        if (!validatePrsInfoData(data)) {
-            throw new Error(ErrorCode.INVALID_PRSINFO_DATA, "Invalid prsInfo data\n data : " + data.toString());
-        }
-        entity.setStudentID(data.getLong("studentID"));
-        entity.setCollege(data.getString("college"));
-        entity.setDepartment(data.getString("department"));
-        entity.setKorName(data.getString("korName"));
-        entity.setEngName(data.getString("engName"));
-        entity.setBirth(data.getString("birth"));
-        entity.setPhone(data.getString("phone"));
-        entity.setBeforeRevise(data.getString("beforeRevise"));
-        entity.setAfterRevise(data.getString("afterRevise"));
+        entity.setStudentID(Long.parseLong(data.getOrDefault("studentID", String.valueOf(entity.getStudentID()))));
+        entity.setCollege(data.getOrDefault("college", entity.getCollege()));
+        entity.setDepartment(data.getOrDefault("department", entity.getDepartment()));
+        entity.setKorName(data.getOrDefault("korName", entity.getKorName()));
+        entity.setEngName(data.getOrDefault("engName", entity.getEngName()));
+        entity.setBirth(data.getOrDefault("birth", entity.getBirth()));
+        entity.setPhone(data.getOrDefault("phone", entity.getPhone()));
+        entity.setBeforeRevise(data.getOrDefault("beforeRevise", entity.getBeforeRevise()));
+        entity.setAfterRevise(data.getOrDefault("afterRevise", entity.getAfterRevise()));
         prsInfoRepository.save(entity);
     }
-
-    private boolean validateResumeData(JsonObject data) {
-        if(!data.containsKey("experienced")) {
-            return false;
-        } else if (!data.containsKey("univScore")) {
-            return false;
-        } else if (!data.containsKey("name")) {
-            return false;
-        } else if (!data.containsKey("gender")) {
-            return false;
-        } else if (!data.containsKey("volunteerArea")) {
-            return false;
-        } else if (!data.containsKey("birth")) {
-            return false;
-        } else if (!data.containsKey("address")) {
-            return false;
-        } else if (!data.containsKey("phone")) {
-            return false;
-        } else if (!data.containsKey("email")) {
-            return false;
-        }
-        return true;
-    }
-
-    private boolean validatePrsInfoData(JsonObject data) {
-        if(!data.containsKey("studentID")) {
-            return false;
-        } else if (!data.containsKey("college")) {
-            return false;
-        } else if (!data.containsKey("department")) {
-            return false;
-        } else if (!data.containsKey("korName")) {
-            return false;
-        } else if (!data.containsKey("engName")) {
-            return false;
-        } else if (!data.containsKey("birth")) {
-            return false;
-        } else if (!data.containsKey("phone")) {
-            return false;
-        } else if (!data.containsKey("beforeRevise")) {
-            return false;
-        } else if (!data.containsKey("afterRevise")) {
-            return false;
-        }
-        return true;
-    }
-
 
     private JsonObject buildResumeInfoEntityJson(ResumeEntity entity) {
         JsonObject json = new JsonObject();

@@ -1,10 +1,12 @@
 package com.docdochae.controller.Dto;
 
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 public class JobDto {
     @Getter
@@ -17,19 +19,12 @@ public class JobDto {
 
     @Getter
     @Setter
-    @AllArgsConstructor
-    public static class SubmitRequestForm {
-        private String reqType;
-        private JsonObject data;
-    }
-
-    @Getter
-    @Setter
     @Builder
-    @NoArgsConstructor
     @AllArgsConstructor
-    public static class JobStatusJto {
+    public static class SubmitRequestJtO {
         private String uuid;
+        private String reqType;
+        private Map<String, String> data;
     }
 
     @Getter
