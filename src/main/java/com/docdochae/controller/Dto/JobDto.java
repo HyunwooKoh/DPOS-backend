@@ -23,7 +23,6 @@ public class JobDto {
     @AllArgsConstructor
     public static class SubmitRequestJtO {
         private String uuid;
-        private String reqType;
         private Map<String, String> data;
     }
 
