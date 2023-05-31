@@ -56,7 +56,7 @@ public class ResumeEntity {
     }
 
     public void setVolunteerArea(String volunteerArea) {
-        this.volunteerArea = experienced;
+        this.volunteerArea = volunteerArea;
     }
 
     public void setBirth(String birth) {
