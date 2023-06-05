@@ -21,17 +21,21 @@ public class TaskEntity {
     @Column(nullable = false, length = 100)
     private String outputFilePath;
 
+    @Column(nullable = false, length = 10)
+    private String reqType;
+
     @Column(nullable = true)
     private int errorCode;
 
     @Column(nullable = true)
     private String errorMsg;
 
-    public TaskEntity(String uuid, String status, String inputFilePath, String outputFilePath) {
+    public TaskEntity(String uuid, String status, String inputFilePath, String outputFilePath, String reqType) {
         this.uuid = uuid;
         this.status = status;
         this.inputFilePath = inputFilePath;
         this.outputFilePath = outputFilePath;
+        this.reqType = reqType;
     }
 
     public void setStatus(String status) {

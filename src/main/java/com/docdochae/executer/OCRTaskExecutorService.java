@@ -59,7 +59,7 @@ public class OCRTaskExecutorService {
         String outputFilePath = CommonApi.getTempDir(uuid) + "result.json";
         // TODO : FileHandler fileHandler = new FileHandler(uuid, ext, inputFilePath, outputFilePath); -> 비동기 처리 (threadPoolExecute)
         OcrParams param = new OcrParams(inputFilePath, outputFilePath, System.getenv("OCR_SERVER_URL"), ext);
-        TaskEntity entity = new TaskEntity(uuid, "waiting", inputFilePath, outputFilePath);
+        TaskEntity entity = new TaskEntity(uuid, "waiting", inputFilePath, outputFilePath, reqType);
 
         if (!reqType.isEmpty() && !param.isValidReqType(reqType)) {
             logger.error("Invalid reqType. uuid : " + uuid + ", reqType : " + reqType);
